@@ -33,6 +33,8 @@ import com.google.inject.Stage;
  */
 public abstract class GuiceServletContextListener implements ServletContextListener {
   
+  static final String USE_REFLECTION = "com.squarespace.jersey2.guice.USE_REFLECTION";
+  
   protected final ServiceLocator locator;
   
   protected final Injector injector;
@@ -45,7 +47,8 @@ public abstract class GuiceServletContextListener implements ServletContextListe
     this.locator = BootstrapUtils.newServiceLocator();
     this.injector = BootstrapUtils.newInjector(locator, stage, modules);
     
-    BootstrapUtils.install(locator);
+    boolean useReflection = Boolean.getBoolean(USE_REFLECTION);
+    BootstrapUtils.install(locator, useReflection);
   }
   
   /**

@@ -42,6 +42,8 @@ import org.jvnet.hk2.internal.DefaultClassAnalyzer;
 import org.jvnet.hk2.internal.DynamicConfigurationImpl;
 import org.jvnet.hk2.internal.DynamicConfigurationServiceImpl;
 import org.jvnet.hk2.internal.ServiceLocatorImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -56,11 +58,20 @@ import com.google.inject.Stage;
  */
 public class BootstrapUtils {
 
+  private static final Logger LOG = LoggerFactory.getLogger(BootstrapUtils.class);
+  
   private static final String PREFIX = "GuiceServiceLocator-";
   
   private static final AtomicInteger NTH = new AtomicInteger();
   
   private BootstrapUtils() {}
+  
+  /**
+   * @see #install(ServiceLocator, boolean)
+   */
+  public static void install(ServiceLocator locator) {
+    install(locator, false);
+  }
   
   /**
    * This is a convenience method to make {@link ServiceLocator} installation easier.
@@ -71,9 +82,28 @@ public class BootstrapUtils {
    * @see InjectionsUtils#setServiceLocatorFactory(ServiceLocatorFactory)
    * @see RuntimeDelegate#setInstance(RuntimeDelegate)
    */
-  public static void install(ServiceLocator locator) {
-    InjectionsUtils.setServiceLocatorGenerator(new GuiceServiceLocatorGenerator(locator));
-    InjectionsUtils.setServiceLocatorFactory(new GuiceServiceLocatorFactory(locator));
+  public static void install(ServiceLocator locator, boolean useReflection) {
+    ServiceLocatorGenerator generator = new GuiceServiceLocatorGenerator(locator);
+    
+    // Don't use reflection if the issue is fixed.
+    if (!InjectionsUtils.hasFix() || useReflection) {
+      
+      if (LOG.isInfoEnabled()) {
+        LOG.info("Using reflection to install ServiceLocatorGenerator: {}", generator);
+      }
+      
+      InjectionsUtils.setServiceLocatorGenerator(generator);
+      InjectionsUtils.setServiceLocatorFactory(new GuiceServiceLocatorFactory(generator));
+    
+    } else {
+      
+      if (LOG.isInfoEnabled()) {
+        LOG.info("Using SPI to install ServiceLocatorGenerator: {}", generator);
+      }
+      
+      InjectionsUtils.installGeneratorSPI(generator);
+    }
+    
     RuntimeDelegate.setInstance(new GuiceRuntimeDelegate(locator));
   }
   

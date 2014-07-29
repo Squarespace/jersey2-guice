@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
+import com.squarespace.jersey2.guice.spi.GuiceServiceLocatorGeneratorSPI;
 
 /**
  * This utility class provides some brute-force setter methods to make HK2 work 
@@ -51,6 +52,18 @@ class InjectionsUtils {
   private static final String MODIFIERS_FIELD = "modifiers";
   
   /**
+   * Returns {@code true} if JERSEY-2551 is fixed.
+   */
+  public static boolean hasFix() {
+    try {
+      Injections.class.getDeclaredField(GENERATOR_FIELD);
+      return false;
+    } catch (NoSuchFieldException err) {
+      return true;
+    }
+  }
+  
+  /**
    * Installs the given {@link ServiceLocatorGenerator}.
    */
   public static void setServiceLocatorGenerator(ServiceLocatorGenerator generator) {
@@ -58,6 +71,22 @@ class InjectionsUtils {
       install(Injections.class, GENERATOR_FIELD, generator);
     } catch (NoSuchFieldException err) {
       LOG.trace("NoSuchFieldException: JERSEY-2551. This OK if you're using Jersey 2.11+", err);
+    
+      installGeneratorSPI(generator);
+    }
+  }
+  
+  /**
+   * Installs the given {@link ServiceLocatorGenerator}.
+   * 
+   * @see GuiceServiceLocatorGeneratorSPI
+   */
+  public static void installGeneratorSPI(ServiceLocatorGenerator generator) {
+    ServiceLocatorGenerator previous 
+      = GuiceServiceLocatorGeneratorSPI.install(generator);
+  
+    if (previous != null && LOG.isWarnEnabled()) {
+      LOG.warn("Replaced ServiceLocatorGenerator (OK if testing): previous={}, generator={}", previous, generator);
     }
   }
   

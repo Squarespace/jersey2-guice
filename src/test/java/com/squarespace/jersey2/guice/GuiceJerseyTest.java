@@ -61,22 +61,34 @@ public class GuiceJerseyTest {
   };
   
   @Test
-  public void embedded() throws IOException {
+  public void useSPI() throws IOException {
+    embedded(false);
+    classic(false);
+  }
+  
+  @Test
+  public void useReflection() throws IOException {
+    embedded(true);
+    classic(true);
+  }
+  
+  private void embedded(boolean useReflection) throws IOException {
     
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
     
     @SuppressWarnings("unused")
     Injector injector = BootstrapUtils.newInjector(locator, Arrays.asList(jerseyModule, customModule));
     
-    BootstrapUtils.install(locator);
+    BootstrapUtils.install(locator, useReflection);
     
     try (HttpServer server = HttpServerUtils.newHttpServer(MyResource.class)) {
       check();
     }
   }
   
-  @Test
-  public void classic() throws IOException {
+  private void classic(boolean useReflection) throws IOException {
+    
+    System.setProperty(GuiceServletContextListener.USE_REFLECTION, Boolean.toString(useReflection));
     
     final AtomicInteger counter = new AtomicInteger();
     

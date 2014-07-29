@@ -47,11 +47,7 @@ class GuiceServiceLocatorFactory extends ServiceLocatorFactory {
   
   private final ServiceLocatorGenerator generator;
   
-  public GuiceServiceLocatorFactory(ServiceLocator locator) {
-    this(new GuiceServiceLocatorGenerator(locator));
-  }
-  
-  private GuiceServiceLocatorFactory(ServiceLocatorGenerator generator) {
+  public GuiceServiceLocatorFactory(ServiceLocatorGenerator generator) {
     this.generator = generator;
   }
   
