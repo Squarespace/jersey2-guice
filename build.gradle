@@ -93,7 +93,7 @@ allprojects {
     compile 'com.google.code.findbugs:jsr305:2.0.3'
     compile 'com.google.inject.extensions:guice-servlet:4.0-beta4'
     
-    compile ('org.glassfish.jersey.containers:jersey-container-servlet-core:2.9.1') {
+    compile ('org.glassfish.jersey.containers:jersey-container-servlet-core:2.11') {
       // Use Guice's javax.inject module
       exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
     }
