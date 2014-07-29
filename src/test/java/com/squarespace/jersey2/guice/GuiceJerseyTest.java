@@ -34,8 +34,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
-import com.squarespace.jersey2.guice.BootstrapUtils;
-import com.squarespace.jersey2.guice.GuiceServletContextListener;
 
 public class GuiceJerseyTest {
 
@@ -60,19 +58,29 @@ public class GuiceJerseyTest {
     }
   };
   
-  @Test
-  public void useSPI() throws IOException {
+  @Test(groups = "SPI")
+  public void useEmbeddedWithSPI() throws IOException {
     embedded(false);
+  }
+  
+  @Test(groups = "SPI")
+  public void useClassicWithSPI() throws IOException {
     classic(false);
   }
   
-  @Test
-  public void useReflection() throws IOException {
+  @Test(dependsOnGroups = "SPI")
+  public void useEmbeddedWithReflection() throws IOException {
     embedded(true);
+  }
+  
+  @Test(dependsOnGroups = "SPI")
+  public void useClassicWithReflection() throws IOException {
     classic(true);
   }
   
   private void embedded(boolean useReflection) throws IOException {
+    
+    System.setProperty(GuiceServletContextListener.USE_REFLECTION, Boolean.toString(useReflection));
     
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
     
