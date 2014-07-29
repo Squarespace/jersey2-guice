@@ -24,6 +24,8 @@ import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.glassfish.hk2.internal.ServiceLocatorFactoryImpl;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
 
@@ -38,6 +40,8 @@ import com.google.inject.Guice;
  */
 class InjectionsUtils {
 
+  private static final Logger LOG = LoggerFactory.getLogger(InjectionsUtils.class);
+  
   private static final String GENERATOR_FIELD = "generator";
   
   private static final String FACTORY_FIELD = "factory";
@@ -50,15 +54,23 @@ class InjectionsUtils {
    * Installs the given {@link ServiceLocatorGenerator}.
    */
   public static void setServiceLocatorGenerator(ServiceLocatorGenerator generator) {
-    install(Injections.class, GENERATOR_FIELD, generator);
+    try {
+      install(Injections.class, GENERATOR_FIELD, generator);
+    } catch (NoSuchFieldException err) {
+      LOG.trace("NoSuchFieldException: JERSEY-2551. This OK if you're using Jersey 2.11+", err);
+    }
   }
   
   /**
    * Installs the given {@link ServiceLocatorFactory}.
    */
   public static void setServiceLocatorFactory(ServiceLocatorFactory factory) {
-    install(ServiceLocatorFactory.class, INSTANCE_FIELD, factory);
-    install(Injections.class, FACTORY_FIELD, factory);
+    try {
+      install(ServiceLocatorFactory.class, INSTANCE_FIELD, factory);
+      install(Injections.class, FACTORY_FIELD, factory);
+    } catch (NoSuchFieldException err) {
+      throw new IllegalStateException(err);
+    }
   }
   
   /**
@@ -76,7 +88,7 @@ class InjectionsUtils {
         && !equals(Injections.class, FACTORY_FIELD, ServiceLocatorFactoryImpl.class);
   }
   
-  private static void install(Class<?> clazz, String name, Object value) {
+  private static void install(Class<?> clazz, String name, Object value) throws NoSuchFieldException {
     try {
       Field field = clazz.getDeclaredField(name);
       field.setAccessible(true);
@@ -94,7 +106,7 @@ class InjectionsUtils {
         field.set(null, value);
       }
       
-    } catch (NoSuchFieldException | IllegalAccessException err) {
+    } catch (IllegalAccessException err) {
       throw new IllegalStateException(err);
     }
   }
