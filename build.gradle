@@ -1,0 +1,126 @@
+buildscript {
+  repositories {
+    mavenCentral()
+    maven { url 'https://oss.sonatype.org/content/groups/public' }
+  }
+  dependencies {
+    classpath 'com.github.townsfolk:gradle-release:1.2'
+  }
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '1.12'
+}
+
+apply plugin: 'release'
+
+allprojects {
+  apply plugin: 'java'
+  apply plugin: 'maven'
+  apply plugin: 'eclipse'
+  apply plugin: 'idea'
+  
+  // UTF-8 should be standard by now. So use it!
+  [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+  
+  sourceCompatibility = 1.7
+  targetCompatibility = 1.7
+  
+  group = 'com.squarespace.jersey2-guice'
+  
+  repositories {
+    mavenCentral()
+    mavenLocal()
+  }
+  
+  configurations {
+    provided
+  }
+  
+  // Telling Eclipse about the provided scope
+  eclipse.classpath.plusConfigurations += [configurations.provided]
+
+  sourceSets {
+    main { 
+      compileClasspath += [configurations.provided]
+    }
+    
+    test { 
+      compileClasspath += [configurations.provided]
+      runtimeClasspath += [configurations.provided]
+    }
+    
+    // Telling IDEA about the provided scope
+    idea {
+      module {
+        scopes.PROVIDED.plus += [configurations.provided]
+      }
+    }
+  }
+  
+  project.ext {
+    releaseRepositoryUrl = System.getenv('RELEASE_REPOSITORY_URL')
+    snapshotRepositoryUrl = System.getenv('SNAPSHOT_REPOSITORY_URL')
+  }
+  
+  
+  task integrationTest(type: Test) {
+    useTestNG()
+    
+    // show standard out and standard error of the test JVM(s) on the console
+    testLogging.showStandardStreams = true
+    
+    include '**/*IT.*'
+    exclude '**/*Test.*'
+  
+    // fork a new java process every 10 test classes
+    forkEvery = 10
+  }
+    
+  test {
+    useTestNG()
+    
+    // show standard out and standard error of the test JVM(s) on the console
+    testLogging.showStandardStreams = true
+      
+    exclude '**/*IT.*'
+    include '**/*Test.*'
+  }
+  
+  dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.7'
+    
+    compile 'com.google.code.findbugs:jsr305:2.0.3'
+    compile 'com.google.inject.extensions:guice-servlet:4.0-beta4'
+    
+    compile ('org.glassfish.jersey.containers:jersey-container-servlet-core:2.9.1') {
+      // Use Guice's javax.inject module
+      exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
+    }
+    
+    provided 'javax.servlet:javax.servlet-api:3.1.0'
+    
+    testCompile 'org.eclipse.jetty:jetty-servlet:9.2.0.v20140526'
+    testCompile 'org.testng:testng:6.8.8'
+  }
+  
+  task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+  }
+    
+  artifacts {
+    archives sourcesJar
+  }
+  
+  uploadArchives {
+    repositories {
+      mavenDeployer {
+        repository(url: project.releaseRepositoryUrl)
+        snapshotRepository(url: project.snapshotRepositoryUrl)
+      }
+    }
+  }
+}
+
+createReleaseTag.dependsOn ':uploadArchives'
