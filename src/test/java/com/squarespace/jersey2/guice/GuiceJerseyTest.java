@@ -27,6 +27,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.hk2.api.ServiceLocator;
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
@@ -62,6 +63,10 @@ public class GuiceJerseyTest {
   // This *MUST* run first. Testing SPIs is not fun!
   @Test(groups = "SPI")
   public void useSPI() throws IOException {
+    if (!InjectionsUtils.hasFix()) {
+      Assert.fail("This test needs Jersey 2.11+");
+    }
+    
     embedded(true);
   }
   
