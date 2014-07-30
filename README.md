@@ -31,7 +31,19 @@ Injecting [UriInfo](https://jsr311.java.net/nonav/javadoc/javax/ws/rs/core/UriIn
 
 ### Gardle
 
+```
+compile "com.squarespace.jersey2-guice:jersey2-guice:${current.version}"
+```
+
 ### Maven
+
+```
+<dependency>
+  <groupId>com.squarespace.jersey2-guice</groupId>
+  <artifactId>jersey2-guice</artifactId>
+  <version>${current.version}</version>
+</dependency>
+```
 
 ### Available Injections
 
@@ -62,7 +74,7 @@ AbstractModule module = new AbstractModule() {
 public class MyApplication extends JerseyGuiceServletContextListener {
 
   @Override
-  protected List<? extends Module  modules() {
+  protected List<? extends Module> modules() {
     return Arrays.asList(module);
   }
 }
@@ -76,7 +88,7 @@ META-INF/services/org.glassfish.hk2.extension.ServiceLocatorGenerator
 public class MyApplication extends JerseyServiceLocatorGeneratorSPI {
 
   @Override
-  protected List<? extends Module  modules() {
+  protected List<? extends Module> modules() {
     return Arrays.asList(module);
   }
 }
@@ -88,8 +100,6 @@ public static void main(String[] args) {
   ServiceLocator locator = BindingUtils.newServiceLocator();
   Injector injector = BindingUtils.newInjector(locator, Arrays.asList(module));
   
-  BindingUtils.link(locator, injector);
-
   InjectionsUtils.install(locator);
 
   // Start Jetty!
