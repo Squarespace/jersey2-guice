@@ -18,7 +18,7 @@ package com.squarespace.jersey2.guice;
 
 import static com.squarespace.jersey2.guice.BindingUtils.newGuiceInjectionResolverDescriptor;
 import static com.squarespace.jersey2.guice.BindingUtils.newServiceLocatorDescriptor;
-import static com.squarespace.jersey2.guice.BindingUtils.newThreeTirtyInjectionResolverDescriptor;
+import static com.squarespace.jersey2.guice.BindingUtils.newThreeThirtyInjectionResolverDescriptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,7 +129,7 @@ public class BootstrapUtils {
     config.bind(newServiceLocatorDescriptor(locator));
     
     ActiveDescriptor<InjectionResolver<javax.inject.Inject>> threeThirtyResolver 
-      = newThreeTirtyInjectionResolverDescriptor(locator);
+      = newThreeThirtyInjectionResolverDescriptor(locator);
     
     config.addActiveDescriptor(threeThirtyResolver);
     config.addActiveDescriptor(newGuiceInjectionResolverDescriptor(

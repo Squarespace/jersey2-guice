@@ -43,8 +43,6 @@ public abstract class JerseyGuiceServletContextListener implements ServletContex
   
   protected final Injector injector;
   
-  private final GuiceServiceLocatorGenerator generator;
-  
   public JerseyGuiceServletContextListener() {
     
     Stage stage = stage();
@@ -52,9 +50,8 @@ public abstract class JerseyGuiceServletContextListener implements ServletContex
     
     this.locator = BootstrapUtils.newServiceLocator();
     this.injector = BootstrapUtils.newInjector(locator, stage, modules);
-    this.generator = new GuiceServiceLocatorGenerator(locator);
     
-    BootstrapUtils.install(generator, locator);
+    BootstrapUtils.install(locator);
   }
   
   /**

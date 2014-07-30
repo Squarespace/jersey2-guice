@@ -29,7 +29,7 @@ Injecting [UriInfo](https://jsr311.java.net/nonav/javadoc/javax/ws/rs/core/UriIn
 
 ## How to use it
 
-### Gardle
+### Gradle
 
 ```
 compile "com.squarespace.jersey2-guice:jersey2-guice:${current.version}"

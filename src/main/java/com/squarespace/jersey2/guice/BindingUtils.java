@@ -62,7 +62,7 @@ class BindingUtils {
    * @see javax.inject.Inject
    * @see InjectionResolver
    */
-  public static ActiveDescriptor<InjectionResolver<javax.inject.Inject>> newThreeTirtyInjectionResolverDescriptor(ServiceLocator locator) {
+  public static ActiveDescriptor<InjectionResolver<javax.inject.Inject>> newThreeThirtyInjectionResolverDescriptor(ServiceLocator locator) {
     GuiceThreeThirtyResolver resolver 
       = new GuiceThreeThirtyResolver(locator);
     
@@ -75,7 +75,7 @@ class BindingUtils {
   /**
    * Creates and returns a {@link InjectionResolver} for {@link com.google.inject.Inject}
    * 
-   * @see #newThreeTirtyInjectionResolverDescriptor(ServiceLocator)
+   * @see #newThreeThirtyInjectionResolverDescriptor(ServiceLocator)
    * @see com.google.inject.Inject
    * @see InjectionResolver
    */
@@ -89,7 +89,7 @@ class BindingUtils {
   }
   
   /**
-   * @see #newThreeTirtyInjectionResolverDescriptor(ServiceLocator)
+   * @see #newThreeThirtyInjectionResolverDescriptor(ServiceLocator)
    * @see #newGuiceInjectionResolverDescriptor(ServiceLocator, ActiveDescriptor)
    */
   private static <T extends Annotation> ActiveDescriptor<InjectionResolver<T>> newActiveDescriptor(ServiceLocator locator, 
