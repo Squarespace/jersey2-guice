@@ -57,13 +57,6 @@ class GuiceServiceLocatorGenerator implements ServiceLocatorGenerator {
     this.root = root;
   }
   
-  /**
-   * Returns the 'root' {@link ServiceLocator}.
-   */
-  public ServiceLocator getServiceLocator() {
-    return root;
-  }
-  
   @Override
   public ServiceLocator create(String name, ServiceLocator parent) {
     

@@ -32,10 +32,6 @@ import org.glassfish.jersey.server.internal.RuntimeDelegateImpl;
  */
 class GuiceRuntimeDelegate extends AbstractRuntimeDelegate {
   
-  public GuiceRuntimeDelegate(GuiceServiceLocatorGenerator generator) {
-    super(generator.getServiceLocator());
-  }
-  
   public GuiceRuntimeDelegate(ServiceLocator locator) {
     super(locator);
   }
