@@ -32,18 +32,16 @@ import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.message.internal.MessagingBinders;
+import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
 import org.jvnet.hk2.internal.DefaultClassAnalyzer;
 import org.jvnet.hk2.internal.DynamicConfigurationImpl;
 import org.jvnet.hk2.internal.DynamicConfigurationServiceImpl;
 import org.jvnet.hk2.internal.ServiceLocatorImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -57,8 +55,6 @@ import com.google.inject.Stage;
  * @see Injector
  */
 public class BootstrapUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(BootstrapUtils.class);
   
   private static final String PREFIX = "GuiceServiceLocator-";
   
@@ -67,43 +63,32 @@ public class BootstrapUtils {
   private BootstrapUtils() {}
   
   /**
-   * @see #install(ServiceLocator, boolean)
+   * Restores Jersey's default state.
+   * 
+   * @see ServiceLocatorGeneratorImpl
+   * @see RuntimeDelegate#setInstance(RuntimeDelegate)
    */
-  public static void install(ServiceLocator locator) {
-    install(locator, false);
+  public static void reset() {
+    InjectionsUtils.install(new ServiceLocatorGeneratorImpl());
+    RuntimeDelegate.setInstance(null);
   }
   
   /**
-   * This is a convenience method to make {@link ServiceLocator} installation easier.
-   * 
-   * NOTE: It's being assumed that the given {@link ServiceLocator} is fully wired for {@link Guice}.
-   * 
-   * @see InjectionsUtils#setServiceLocatorGenerator(ServiceLocatorGenerator)
-   * @see InjectionsUtils#setServiceLocatorFactory(ServiceLocatorFactory)
+   * @see #install(ServiceLocatorGenerator, ServiceLocator)
+   */
+  static void install(ServiceLocator locator) {
+    install(new GuiceServiceLocatorGenerator(locator), locator);
+  }
+  
+  /**
+   * Installs the given {@link GuiceServiceLocatorGenerator} and {@link ServiceLocator} using reflection.
+   *
+   * @see InjectionsUtils#install(org.glassfish.hk2.extension.ServiceLocatorGenerator)
    * @see RuntimeDelegate#setInstance(RuntimeDelegate)
    */
-  public static void install(ServiceLocator locator, boolean useReflection) {
-    ServiceLocatorGenerator generator = new GuiceServiceLocatorGenerator(locator);
+  public static void install(ServiceLocatorGenerator generator, ServiceLocator locator) {
     
-    // Don't use reflection if the issue is fixed.
-    if (!InjectionsUtils.hasFix() || useReflection) {
-      
-      if (LOG.isInfoEnabled()) {
-        LOG.info("Using reflection to install ServiceLocatorGenerator: {}", generator);
-      }
-      
-      InjectionsUtils.setServiceLocatorGenerator(generator);
-      InjectionsUtils.setServiceLocatorFactory(new GuiceServiceLocatorFactory(generator));
-    
-    } else {
-      
-      if (LOG.isInfoEnabled()) {
-        LOG.info("Using SPI to install ServiceLocatorGenerator: {}", generator);
-      }
-      
-      InjectionsUtils.installGeneratorSPI(generator);
-    }
-    
+    InjectionsUtils.install(generator);
     RuntimeDelegate.setInstance(new GuiceRuntimeDelegate(locator));
   }
   

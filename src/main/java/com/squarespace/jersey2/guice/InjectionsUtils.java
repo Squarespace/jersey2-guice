@@ -21,14 +21,9 @@ import java.lang.reflect.Modifier;
 
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
-import org.glassfish.hk2.internal.ServiceLocatorFactoryImpl;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
-import com.squarespace.jersey2.guice.spi.GuiceServiceLocatorGeneratorSPI;
 
 /**
  * This utility class provides some brute-force setter methods to make HK2 work 
@@ -40,19 +35,17 @@ import com.squarespace.jersey2.guice.spi.GuiceServiceLocatorGeneratorSPI;
  * @see https://java.net/jira/browse/JERSEY-2551
  */
 class InjectionsUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(InjectionsUtils.class);
   
   private static final String GENERATOR_FIELD = "generator";
   
-  private static final String FACTORY_FIELD = "factory";
-  
-  private static final String INSTANCE_FIELD = "INSTANCE";
-  
   private static final String MODIFIERS_FIELD = "modifiers";
+  
+  private static final String DEFAULT_GENERATOR_FIELD = "defaultGenerator";
   
   /**
    * Returns {@code true} if JERSEY-2551 is fixed.
+   * 
+   * Should be {@code true} for Jersey 2.11+
    */
   public static boolean hasFix() {
     try {
@@ -64,79 +57,38 @@ class InjectionsUtils {
   }
   
   /**
-   * Installs the given {@link ServiceLocatorGenerator}.
+   * Installs the given {@link ServiceLocatorGenerator} using reflection.
    */
-  public static void setServiceLocatorGenerator(ServiceLocatorGenerator generator) {
+  public static void install(ServiceLocatorGenerator generator) {
     try {
-      install(Injections.class, GENERATOR_FIELD, generator);
-    } catch (NoSuchFieldException err) {
-      LOG.trace("NoSuchFieldException: JERSEY-2551. This OK if you're using Jersey 2.11+", err);
-    
-      installGeneratorSPI(generator);
-    }
-  }
-  
-  /**
-   * Installs the given {@link ServiceLocatorGenerator}.
-   * 
-   * @see GuiceServiceLocatorGeneratorSPI
-   */
-  public static void installGeneratorSPI(ServiceLocatorGenerator generator) {
-    ServiceLocatorGenerator previous 
-      = GuiceServiceLocatorGeneratorSPI.install(generator);
-  
-    if (previous != null && LOG.isWarnEnabled()) {
-      LOG.warn("Replaced ServiceLocatorGenerator (OK if testing): previous={}, generator={}", previous, generator);
-    }
-  }
-  
-  /**
-   * Installs the given {@link ServiceLocatorFactory}.
-   */
-  public static void setServiceLocatorFactory(ServiceLocatorFactory factory) {
-    try {
-      install(ServiceLocatorFactory.class, INSTANCE_FIELD, factory);
-      install(Injections.class, FACTORY_FIELD, factory);
-    } catch (NoSuchFieldException err) {
-      throw new IllegalStateException(err);
-    }
-  }
-  
-  /**
-   * Returns {@code true} if there is a non {@link ServiceLocatorGeneratorImpl} installed.
-   */
-  public static boolean isGeneratorInstalled() {
-    return !equals(Injections.class, GENERATOR_FIELD, ServiceLocatorGeneratorImpl.class);
-  }
-  
-  /**
-   * Returns {@code true} if there is a non {@link ServiceLocatorFactoryImpl} installed.
-   */
-  public static boolean isFactoryInstalled() {
-    return !equals(ServiceLocatorFactory.class, INSTANCE_FIELD, ServiceLocatorFactoryImpl.class)
-        && !equals(Injections.class, FACTORY_FIELD, ServiceLocatorFactoryImpl.class);
-  }
-  
-  private static void install(Class<?> clazz, String name, Object value) throws NoSuchFieldException {
-    try {
-      Field field = clazz.getDeclaredField(name);
-      field.setAccessible(true);
-      
-      // Turn off the 'final' if necessary!
-      int modifiers = field.getModifiers();
-      if (Modifier.isFinal(modifiers)) {
-        setModifiers(field, modifiers & ~Modifier.FINAL);
-        try {
-          field.set(null, value);
-        } finally {
-          setModifiers(field, modifiers | Modifier.FINAL);
-        }
-      } else {
-        field.set(null, value);
+      if (!hasFix()) {
+        Field field = Injections.class.getDeclaredField(GENERATOR_FIELD);
+        set(field, null, generator);
       }
       
-    } catch (IllegalAccessException err) {
+      ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
+      Class<?> clazz = factory.getClass();
+      Field field = clazz.getDeclaredField(DEFAULT_GENERATOR_FIELD);
+      set(field, factory, generator);
+      
+    } catch (NoSuchFieldException | IllegalAccessException | SecurityException err) {
       throw new IllegalStateException(err);
+    }
+  }
+  
+  private static void set(Field field, Object instance, Object value) throws  IllegalAccessException, NoSuchFieldException, SecurityException {
+    field.setAccessible(true);
+    
+    int modifiers = field.getModifiers();
+    if (Modifier.isFinal(modifiers)) {
+      setModifiers(field, modifiers & ~Modifier.FINAL);
+      try {
+        field.set(instance, value);
+      } finally {
+        setModifiers(field, modifiers | Modifier.FINAL);
+      }
+    } else {
+      field.set(instance, value);
     }
   }
   
@@ -144,25 +96,6 @@ class InjectionsUtils {
     Field field = Field.class.getDeclaredField(MODIFIERS_FIELD);
     field.setAccessible(true);
     field.setInt(dst, modifiers);
-  }
-  
-  private static boolean equals(Class<?> clazz, String name, Class<?> type) {
-    Object value = getValue(clazz, name);
-    if (value != null && value.getClass().equals(type)) {
-      return true;
-    }
-    
-    return false;
-  }
-  
-  private static Object getValue(Class<?> clazz, String name) {
-    try {
-      Field field = clazz.getDeclaredField(name);
-      field.setAccessible(true);
-      return field.get(null);
-    } catch (NoSuchFieldException | IllegalAccessException err) {
-      throw new IllegalStateException(err);
-    }
   }
   
   private InjectionsUtils() {}

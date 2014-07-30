@@ -26,29 +26,35 @@ import org.glassfish.hk2.api.ServiceLocator;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.google.inject.servlet.GuiceServletContextListener;
 
 /**
+ * Extend this class and make the same entries as for {@link GuiceServletContextListener}
+ * in the {@literal web.xml} file.
  * 
- * @see com.google.inject.servlet.GuiceServletContextListener
+ * NOTE: This is incompatible to {@link JerseyServiceLocatorGeneratorSPI}.
+ * 
+ * @see JerseyServiceLocatorGeneratorSPI
+ * @see GuiceServletContextListener
  */
-public abstract class GuiceServletContextListener implements ServletContextListener {
-  
-  static final String USE_REFLECTION = "com.squarespace.jersey2.guice.USE_REFLECTION";
+public abstract class JerseyGuiceServletContextListener implements ServletContextListener {
   
   protected final ServiceLocator locator;
   
   protected final Injector injector;
   
-  public GuiceServletContextListener() {
+  private final GuiceServiceLocatorGenerator generator;
+  
+  public JerseyGuiceServletContextListener() {
     
     Stage stage = stage();
     List<? extends Module> modules = modules();
     
     this.locator = BootstrapUtils.newServiceLocator();
     this.injector = BootstrapUtils.newInjector(locator, stage, modules);
+    this.generator = new GuiceServiceLocatorGenerator(locator);
     
-    boolean useReflection = Boolean.getBoolean(USE_REFLECTION);
-    BootstrapUtils.install(locator, useReflection);
+    BootstrapUtils.install(generator, locator);
   }
   
   /**

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.squarespace.jersey2.guice.spi;
+package com.squarespace.jersey2.guice;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -23,19 +23,17 @@ import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 
 /**
  * This class gets initialized via SPI.
- * 
- * @see META-INF/services/org.glassfish.hk2.extension.ServiceLocatorGenerator
- * @see https://java.net/jira/browse/JERSEY-2551
  */
-public class GuiceServiceLocatorGeneratorSPI implements ServiceLocatorGenerator {
+public class ServiceLocatorGeneratorHolderSPI implements ServiceLocatorGenerator {
   
   private static final AtomicReference<ServiceLocatorGenerator> GENERATOR_REF = new AtomicReference<>();
   
-  public static ServiceLocatorGenerator install(ServiceLocatorGenerator generator) {
-    return GENERATOR_REF.getAndSet(generator);
+  public static ServiceLocatorGenerator install(ServiceLocator locator) {
+    return install(new GuiceServiceLocatorGenerator(locator));
   }
   
-  public GuiceServiceLocatorGeneratorSPI() {
+  public static ServiceLocatorGenerator install(ServiceLocatorGenerator generator) {
+    return GENERATOR_REF.getAndSet(generator);
   }
   
   @Override

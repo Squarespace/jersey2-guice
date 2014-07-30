@@ -51,10 +51,17 @@ class GuiceServiceLocatorGenerator implements ServiceLocatorGenerator {
   
   private final AtomicInteger nth = new AtomicInteger();
   
-  private final ServiceLocator root;
+  final ServiceLocator root;
   
   public GuiceServiceLocatorGenerator(ServiceLocator root) {
     this.root = root;
+  }
+  
+  /**
+   * Returns the 'root' {@link ServiceLocator}.
+   */
+  public ServiceLocator getServiceLocator() {
+    return root;
   }
   
   @Override
