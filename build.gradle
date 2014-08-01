@@ -9,7 +9,7 @@ buildscript {
 }
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '1.12'
+  gradleVersion = '2.0'
 }
 
 apply plugin: 'release'
@@ -17,6 +17,7 @@ apply plugin: 'release'
 allprojects {
   apply plugin: 'java'
   apply plugin: 'maven'
+  apply plugin: 'signing'
   apply plugin: 'eclipse'
   apply plugin: 'idea'
   
@@ -59,10 +60,9 @@ allprojects {
   }
   
   project.ext {
-    releaseRepositoryUrl = System.getenv('RELEASE_REPOSITORY_URL')
-    snapshotRepositoryUrl = System.getenv('SNAPSHOT_REPOSITORY_URL')
+    guice = System.getProperty('guice', '4.0-beta4')
+    jersey = System.getProperty('jersey', '2.11')
   }
-  
   
   task integrationTest(type: Test) {
     useTestNG()
@@ -90,10 +90,10 @@ allprojects {
   dependencies {
     compile 'org.slf4j:slf4j-api:1.7.7'
     
-    compile 'com.google.code.findbugs:jsr305:2.0.3'
-    compile 'com.google.inject.extensions:guice-servlet:4.0-beta4'
+    compile 'com.google.code.findbugs:jsr305:3.0.0'
+    compile "com.google.inject.extensions:guice-servlet:${project.guice}"
     
-    compile ('org.glassfish.jersey.containers:jersey-container-servlet-core:2.11') {
+    compile ("org.glassfish.jersey.containers:jersey-container-servlet-core:${project.jersey}") {
       // Use Guice's javax.inject module
       exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
     }
@@ -108,16 +108,68 @@ allprojects {
     classifier = 'sources'
     from sourceSets.main.allSource
   }
-    
+  
+  task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+  }
+  
   artifacts {
-    archives sourcesJar
+    archives sourcesJar 
+    archives javadocJar
+  }
+  
+  signing {
+    sign configurations.archives
   }
   
   uploadArchives {
     repositories {
+    
+      // Squarespace
       mavenDeployer {
-        repository(url: project.releaseRepositoryUrl)
-        snapshotRepository(url: project.snapshotRepositoryUrl)
+        repository(url: RELEASE_REPOSITORY_URL)
+        snapshotRepository(url: SNAPSHOT_REPOSITORY_URL)
+      }
+      
+      // Maven Central
+      mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+        
+        repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+          authentication(userName: MAVEN_CENTRAL_USERNAME, password: MAVEN_CENTRAL_PASSWORD)
+        }
+  
+        snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+          authentication(userName: MAVEN_CENTRAL_USERNAME, password: MAVEN_CENTRAL_PASSWORD)
+        }
+        
+        pom.project {
+          name 'Jersey 2.0 w/ Guice'
+          packaging 'jar'
+          description ''
+          url 'https://github.com/Squarespace/jersey2-guice'
+  
+          scm {
+            connection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
+            developerConnection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
+            url 'https://github.com/Squarespace/jersey2-guice'
+          }
+  
+          licenses {
+            license {
+              name 'The Apache Software License, Version 2.0'
+              url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+          }
+  
+          developers {
+            developer {
+              id 'Squarespace, Inc.'
+              url 'http://www.squarespace.com'
+            }
+          }
+        }
       }
     }
   }
