@@ -132,16 +132,19 @@ allprojects {
     sign configurations.archives
   }
   
-  uploadArchives {
-    repositories {
+  task uploadSquarespace(type: Upload) {
+    configuration = configurations.archives
     
-      // Squarespace
+    repositories {
       mavenDeployer {
         repository(url: RELEASE_REPOSITORY_URL)
         snapshotRepository(url: SNAPSHOT_REPOSITORY_URL)
       }
-      
-      // Maven Central
+    }
+  }
+  
+  uploadArchives {
+    repositories {
       mavenDeployer {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
         
