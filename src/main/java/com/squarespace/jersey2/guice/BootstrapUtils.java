@@ -76,7 +76,7 @@ public class BootstrapUtils {
   /**
    * @see #install(ServiceLocatorGenerator, ServiceLocator)
    */
-  static void install(ServiceLocator locator) {
+  public static void install(ServiceLocator locator) {
     install(new GuiceServiceLocatorGenerator(locator), locator);
   }
   

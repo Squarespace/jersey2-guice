@@ -97,10 +97,10 @@ public class MyApplication extends JerseyServiceLocatorGeneratorSPI {
 ```
 // Option #3 w/ Reflection
 public static void main(String[] args) {
-  ServiceLocator locator = BindingUtils.newServiceLocator();
-  Injector injector = BindingUtils.newInjector(locator, Arrays.asList(module));
+  ServiceLocator locator = BootstrapUtils.newServiceLocator();
+  Injector injector = BootstrapUtils.newInjector(locator, Arrays.asList(module));
   
-  InjectionsUtils.install(locator);
+  BootstrapUtils.install(locator);
 
   // Start Jetty!
 }
