@@ -187,4 +187,4 @@ allprojects {
   }
 }
 
-createReleaseTag.dependsOn ':uploadArchives'
+createReleaseTag.dependsOn ':uploadArchives', ':uploadSquarespace'
