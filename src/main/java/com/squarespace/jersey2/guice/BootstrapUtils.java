@@ -18,7 +18,7 @@ package com.squarespace.jersey2.guice;
 
 import static com.squarespace.jersey2.guice.BindingUtils.newGuiceInjectionResolverDescriptor;
 import static com.squarespace.jersey2.guice.BindingUtils.newServiceLocatorDescriptor;
-import static com.squarespace.jersey2.guice.BindingUtils.newThreeTirtyInjectionResolverDescriptor;
+import static com.squarespace.jersey2.guice.BindingUtils.newThreeThirtyInjectionResolverDescriptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,12 +32,12 @@ import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.message.internal.MessagingBinders;
+import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
 import org.jvnet.hk2.internal.DefaultClassAnalyzer;
 import org.jvnet.hk2.internal.DynamicConfigurationImpl;
 import org.jvnet.hk2.internal.DynamicConfigurationServiceImpl;
@@ -55,7 +55,7 @@ import com.google.inject.Stage;
  * @see Injector
  */
 public class BootstrapUtils {
-
+  
   private static final String PREFIX = "GuiceServiceLocator-";
   
   private static final AtomicInteger NTH = new AtomicInteger();
@@ -63,17 +63,32 @@ public class BootstrapUtils {
   private BootstrapUtils() {}
   
   /**
-   * This is a convenience method to make {@link ServiceLocator} installation easier.
+   * Restores Jersey's default state.
    * 
-   * NOTE: It's being assumed that the given {@link ServiceLocator} is fully wired for {@link Guice}.
-   * 
-   * @see InjectionsUtils#setServiceLocatorGenerator(ServiceLocatorGenerator)
-   * @see InjectionsUtils#setServiceLocatorFactory(ServiceLocatorFactory)
+   * @see ServiceLocatorGeneratorImpl
    * @see RuntimeDelegate#setInstance(RuntimeDelegate)
    */
-  public static void install(ServiceLocator locator) {
-    InjectionsUtils.setServiceLocatorGenerator(new GuiceServiceLocatorGenerator(locator));
-    InjectionsUtils.setServiceLocatorFactory(new GuiceServiceLocatorFactory(locator));
+  public static void reset() {
+    InjectionsUtils.install(new ServiceLocatorGeneratorImpl());
+    RuntimeDelegate.setInstance(null);
+  }
+  
+  /**
+   * @see #install(ServiceLocatorGenerator, ServiceLocator)
+   */
+  static void install(ServiceLocator locator) {
+    install(new GuiceServiceLocatorGenerator(locator), locator);
+  }
+  
+  /**
+   * Installs the given {@link GuiceServiceLocatorGenerator} and {@link ServiceLocator} using reflection.
+   *
+   * @see InjectionsUtils#install(org.glassfish.hk2.extension.ServiceLocatorGenerator)
+   * @see RuntimeDelegate#setInstance(RuntimeDelegate)
+   */
+  public static void install(ServiceLocatorGenerator generator, ServiceLocator locator) {
+    
+    InjectionsUtils.install(generator);
     RuntimeDelegate.setInstance(new GuiceRuntimeDelegate(locator));
   }
   
@@ -114,7 +129,7 @@ public class BootstrapUtils {
     config.bind(newServiceLocatorDescriptor(locator));
     
     ActiveDescriptor<InjectionResolver<javax.inject.Inject>> threeThirtyResolver 
-      = newThreeTirtyInjectionResolverDescriptor(locator);
+      = newThreeThirtyInjectionResolverDescriptor(locator);
     
     config.addActiveDescriptor(threeThirtyResolver);
     config.addActiveDescriptor(newGuiceInjectionResolverDescriptor(

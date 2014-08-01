@@ -27,6 +27,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.hk2.api.ServiceLocator;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
@@ -34,8 +36,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
-import com.squarespace.jersey2.guice.BootstrapUtils;
-import com.squarespace.jersey2.guice.GuiceServletContextListener;
 
 public class GuiceJerseyTest {
 
@@ -60,30 +60,34 @@ public class GuiceJerseyTest {
     }
   };
   
-  @Test
-  public void embedded() throws IOException {
-    
-    ServiceLocator locator = BootstrapUtils.newServiceLocator();
-    
-    @SuppressWarnings("unused")
-    Injector injector = BootstrapUtils.newInjector(locator, Arrays.asList(jerseyModule, customModule));
-    
-    BootstrapUtils.install(locator);
-    
-    try (HttpServer server = HttpServerUtils.newHttpServer(MyResource.class)) {
-      check();
+  // This *MUST* run first. Testing SPIs is not fun!
+  @Test(groups = "SPI")
+  public void useSPI() throws IOException {
+    if (!InjectionsUtils.hasFix()) {
+      Assert.fail("This test needs Jersey 2.11+");
     }
+    
+    embedded(true);
   }
   
-  @Test
-  public void classic() throws IOException {
-    
+  @AfterTest
+  public void reset() {
+    BootstrapUtils.reset();
+  }
+  
+  @Test(dependsOnGroups = "SPI")
+  public void useReflection() throws IOException {
+    embedded(false);
+  }
+  
+  @Test(dependsOnGroups = "SPI")
+  public void useServletContextListener() throws IOException {
     final AtomicInteger counter = new AtomicInteger();
     
     ServletContextListener listener = new ServletContextListener() {
       @Override
       public void contextInitialized(ServletContextEvent sce) {
-        (new GuiceServletContextListener() {
+        (new JerseyGuiceServletContextListener() {
           @Override
           protected List<? extends Module> modules() {
             counter.incrementAndGet();
@@ -103,6 +107,24 @@ public class GuiceJerseyTest {
     
     // Make sure it called once and once only
     assertEquals(counter.get(), 1);
+  }
+  
+  private void embedded(boolean useSPI) throws IOException {
+    
+    ServiceLocator locator = BootstrapUtils.newServiceLocator();
+    
+    @SuppressWarnings("unused")
+    Injector injector = BootstrapUtils.newInjector(locator, Arrays.asList(jerseyModule, customModule));
+    
+    if (useSPI) {
+      ServiceLocatorGeneratorHolderSPI.install(locator);
+    } else {
+      BootstrapUtils.install(locator);
+    }
+    
+    try (HttpServer server = HttpServerUtils.newHttpServer(MyResource.class)) {
+      check();
+    }
   }
   
   private void check() throws IOException {

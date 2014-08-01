@@ -26,18 +26,24 @@ import org.glassfish.hk2.api.ServiceLocator;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.google.inject.servlet.GuiceServletContextListener;
 
 /**
+ * Extend this class and make the same entries as for {@link GuiceServletContextListener}
+ * in the {@literal web.xml} file.
  * 
- * @see com.google.inject.servlet.GuiceServletContextListener
+ * NOTE: This is incompatible to {@link JerseyServiceLocatorGeneratorSPI}.
+ * 
+ * @see JerseyServiceLocatorGeneratorSPI
+ * @see GuiceServletContextListener
  */
-public abstract class GuiceServletContextListener implements ServletContextListener {
+public abstract class JerseyGuiceServletContextListener implements ServletContextListener {
   
   protected final ServiceLocator locator;
   
   protected final Injector injector;
   
-  public GuiceServletContextListener() {
+  public JerseyGuiceServletContextListener() {
     
     Stage stage = stage();
     List<? extends Module> modules = modules();

@@ -29,6 +29,22 @@ Injecting [UriInfo](https://jsr311.java.net/nonav/javadoc/javax/ws/rs/core/UriIn
 
 ## How to use it
 
+### Gradle
+
+```
+compile "com.squarespace.jersey2-guice:jersey2-guice:${current.version}"
+```
+
+### Maven
+
+```
+<dependency>
+  <groupId>com.squarespace.jersey2-guice</groupId>
+  <artifactId>jersey2-guice</artifactId>
+  <version>${current.version}</version>
+</dependency>
+```
+
 ### Available Injections
 
 The following items are available for injection (on top of [ServletModule's](https://github.com/google/guice/wiki/ServletModule) bindings). You can customize the list by extracting more things from the [ServiceLocator](https://hk2.java.net/nonav/hk2-api/apidocs/org/glassfish/hk2/api/ServiceLocator.html).
@@ -55,23 +71,35 @@ AbstractModule module = new AbstractModule() {
 
 ```
 // Option #1 (Classic) w/ ServletContextListener
-public class MyApplication extends com.squarespace.jersey2.guice.GuiceServletContextListener {
+public class MyApplication extends JerseyGuiceServletContextListener {
 
   @Override
-  protected List<? extends Module  modules() {
+  protected List<? extends Module> modules() {
     return Arrays.asList(module);
   }
 }
 ```
 
 ```
-// Option #2 (Embedded)
+META-INF/services/org.glassfish.hk2.extension.ServiceLocatorGenerator
+  -> my.package.MyApplication
+
+// Option #2 w/ ServiceLocatorGenerator (SPI)
+public class MyApplication extends JerseyServiceLocatorGeneratorSPI {
+
+  @Override
+  protected List<? extends Module> modules() {
+    return Arrays.asList(module);
+  }
+}
+```
+
+```
+// Option #3 w/ Reflection
 public static void main(String[] args) {
   ServiceLocator locator = BindingUtils.newServiceLocator();
   Injector injector = BindingUtils.newInjector(locator, Arrays.asList(module));
   
-  BindingUtils.link(locator, injector);
-
   InjectionsUtils.install(locator);
 
   // Start Jetty!
