@@ -29,14 +29,15 @@ import com.google.inject.Module;
 import com.google.inject.Stage;
 
 /**
- * To use SPI extend this class and make an entry for it in the META-INF/services/org.glassfish.hk2.extension.ServiceLocatorGenerator
+ * To use SPI extend this class and make an entry for it in the {@code META-INF/services/org.glassfish.hk2.extension.ServiceLocatorGenerator}
  * file. See {@link ServiceLoader} for more information.
  * 
  * NOTE: You need Jersey 2.11+ and this is incompatible to {@link JerseyGuiceServletContextListener}.
  * 
+ * <p>{@code META-INF/services/org.glassfish.hk2.extension.ServiceLocatorGenerator}
+ * 
  * @see ServiceLoader
  * @see JerseyGuiceServletContextListener
- * @see META-INF/services/org.glassfish.hk2.extension.ServiceLocatorGenerator
  */
 public abstract class JerseyServiceLocatorGeneratorSPI implements ServiceLocatorGenerator {
   
