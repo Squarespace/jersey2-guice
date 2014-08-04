@@ -125,13 +125,9 @@ public class MyResource {
 
 ## How it works
 
-If you're a longtime Guice & Jersey user then you've probably come across the issue with Jersey 2.0. There has been a [history of attempts](https://java.net/jira/browse/HK2-121) [[1](https://groups.google.com/d/msg/google-guice/Qrai0osMCzI/moyRuT51crMJ)] to integrate Guice in Jersey 2.0.
+If you're a longtime Guice & Jersey user then you've probably come across the issue with Jersey 2.0.
 
-The root of all the trouble is [JERSEY-2551](https://java.net/jira/browse/JERSEY-2551). A lot of HK2 is written with [SPIs](http://en.wikipedia.org/wiki/Service_provider_interface) in mind but deep down it's hard-coded to some `private static final` factories that cannot be changed with no other means than brute-force reflection.
-
-This project provides an API to make Jersey 2.0 work with Guice right now (with reflection) and it provides a path to make it work once JERSEY-2551 gets fixed.
-
-**NOTE:** Issue JERSEY-2551 is fixed in Jersey 2.11+.
+The root of all the trouble is [JERSEY-2551](https://java.net/jira/browse/JERSEY-2551). A lot of HK2 is written with [SPIs](http://en.wikipedia.org/wiki/Service_provider_interface) and extensibility in mind but deep down it's hard-coded to some `private static final` factories that cannot be changed with no other means than brute-force reflection. Issue JERSEY-2551 has been fixed in Jersey 2.11+ and this library supports older versions (e.g. 2.9.x) and 2.11+.
 
 
 # Apache 2.0 License
