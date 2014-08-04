@@ -159,7 +159,7 @@ allprojects {
         pom.project {
           name 'Jersey 2.0 w/ Guice'
           packaging 'jar'
-          description ''
+          description 'This library adds support for Jersey 2.0 w/ Guice'
           url 'https://github.com/Squarespace/jersey2-guice'
   
           scm {
