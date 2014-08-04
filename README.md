@@ -2,7 +2,7 @@
 
 This library provides support for Jersey 2.0 w/ Guice similar to the way it used to work in Jersey 1.x with the [jersey-guice](https://jersey.java.net/nonav/apidocs/1.8/contribs/jersey-guice/com/sun/jersey/guice/spi/container/servlet/package-summary.html) library. It uses Guice's own [GuiceFilter](https://google-guice.googlecode.com/git/javadoc/com/google/inject/servlet/GuiceFilter.html) (like jersey-guice) and it's somewhat different from the [Guice/HK2 Bridge](https://hk2.java.net/guice-bridge).
 
-[![Continuous Integration]](https://travis-ci.org/Squarespace/jersey2-guice.svg?branch=master)
+[Continuous Integration](https://travis-ci.org/Squarespace/jersey2-guice.svg?branch=master)
 
 ## Differences
 
