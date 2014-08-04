@@ -42,7 +42,7 @@ public class MyResource {
   private Injector injector;
   
   @Inject
-  @Named(GuiceJerseyTest.NAME)
+  @Named(JerseyGuiceTest.NAME)
   private String value;
   
   @Inject

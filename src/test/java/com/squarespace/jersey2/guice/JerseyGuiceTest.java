@@ -53,7 +53,7 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
 
-public class GuiceJerseyTest {
+public class JerseyGuiceTest {
 
   public static final String NAME = "JerseyGuiceTest.NAME";
   
