@@ -8,7 +8,7 @@ This library provides support for Jersey 2.0 w/ Guice similar to the way it used
 
 ### Differences to Jersey 1.x w/ Guice
 
-This library does **NOT** use Guice's [GuiceServletContextListener](https://google-guice.googlecode.com/git/javadoc/com/google/inject/servlet/GuiceServletContextListener.html) to get things started. We use a slightly different [ServletContextListener](https://github.com/Squarespace/jersey2-guice/blob/master/src/main/java/com/squarespace/jersey2/guice/JerseyGuiceServletContextListener.java) implementation to bootstrap Guice and there are also two alternative approaches available.
+This library does **NOT** use Guice's [GuiceServletContextListener](https://google-guice.googlecode.com/git/javadoc/com/google/inject/servlet/GuiceServletContextListener.html) to get things started. We use a slightly different [ServletContextListener](https://github.com/Squarespace/jersey2-guice/blob/master/src/main/java/com/squarespace/jersey2/guice/JerseyGuiceServletContextListener.java) implementation to bootstrap Guice and there are also two alternative approaches available (see [below](https://github.com/Squarespace/jersey2-guice#example)).
 
 ### Differences to Guice/HK2 Bridge
 
