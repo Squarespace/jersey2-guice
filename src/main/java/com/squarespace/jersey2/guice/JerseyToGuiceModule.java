@@ -58,6 +58,8 @@ class JerseyToGuiceModule extends AbstractModule {
   
   @Override
   protected void configure() {
+    //bindScope(GuiceScope.class, Scopes.NO_SCOPE);
+    
     bind(ServiceLocator.class).toInstance(locator);
     
     bind(Application.class)

@@ -19,6 +19,7 @@ package com.squarespace.jersey2.guice;
 import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,6 +43,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -50,6 +53,7 @@ import org.testng.annotations.Test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
 
@@ -58,6 +62,8 @@ public class JerseyGuiceTest {
   public static final String NAME = "JerseyGuiceTest.NAME";
   
   private static final String VALUE = "Hello, World!";
+  
+  private final MyInterceptor interceptor = new MyInterceptor();
   
   private final ServletModule jerseyModule = new ServletModule() {
     @Override
@@ -76,8 +82,19 @@ public class JerseyGuiceTest {
     }
   };
   
+  private final AbstractModule aopModule = new AbstractModule() {
+    @Override
+    protected void configure() {
+      bind(MyResource.class);
+      
+      bindInterceptor(Matchers.any(), 
+        Matchers.annotatedWith(MyAnnotation.class), 
+        interceptor);
+    }
+  };
+  
   // This *MUST* run first. Testing SPIs is not fun!
-  @Test(groups = "SPI")
+  //@Test(groups = "SPI")
   public void useSPI() throws IOException {
     if (!InjectionsUtils.hasFix()) {
       Assert.fail("This test needs Jersey 2.11+");
@@ -86,17 +103,17 @@ public class JerseyGuiceTest {
     embedded(true);
   }
   
-  @AfterTest
+  //@AfterTest
   public void reset() {
     BootstrapUtils.reset();
   }
   
-  @Test(dependsOnGroups = "SPI")
+  //@Test(dependsOnGroups = "SPI")
   public void useReflection() throws IOException {
     embedded(false);
   }
   
-  @Test(dependsOnGroups = "SPI")
+  //@Test(dependsOnGroups = "SPI")
   public void useServletContextListener() throws IOException {
     final AtomicInteger counter = new AtomicInteger();
     
@@ -125,12 +142,26 @@ public class JerseyGuiceTest {
     assertEquals(counter.get(), 1);
   }
   
-  private void embedded(boolean useSPI) throws IOException {
+  //@Test(dependsOnGroups = "SPI")
+  @Test
+  public void checkAOP() throws IOException {
+    interceptor.counter.set(0);
+    
+    embedded(true, aopModule);
+    
+    assertEquals(interceptor.counter.get(), 1);
+  }
+  
+  private void embedded(boolean useSPI, Module... extras) throws IOException {
     
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
     
+    List<Module> modules = new ArrayList<>();
+    modules.addAll(Arrays.asList(jerseyModule, customModule));
+    modules.addAll(Arrays.asList(extras));
+    
     @SuppressWarnings("unused")
-    Injector injector = BootstrapUtils.newInjector(locator, Arrays.asList(jerseyModule, customModule));
+    Injector injector = BootstrapUtils.newInjector(locator, modules);
     
     if (useSPI) {
       ServiceLocatorGeneratorHolderSPI.install(locator);
@@ -225,6 +256,17 @@ public class JerseyGuiceTest {
 
     @Override
     public void destroy() {
+    }
+  }
+  
+  private class MyInterceptor implements MethodInterceptor {
+
+    public final AtomicInteger counter = new AtomicInteger();
+    
+    @Override
+    public Object invoke(MethodInvocation invocation) throws Throwable {
+      counter.incrementAndGet();
+      return invocation.proceed();
     }
   }
 }
