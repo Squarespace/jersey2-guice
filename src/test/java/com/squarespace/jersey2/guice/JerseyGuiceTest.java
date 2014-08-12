@@ -108,12 +108,12 @@ public class JerseyGuiceTest {
     BootstrapUtils.reset();
   }
   
-  @Test(dependsOnGroups = "SPI")
+  @Test(groups = "Non-SPI", dependsOnGroups = "SPI")
   public void useReflection() throws IOException {
     embedded(false);
   }
   
-  @Test(dependsOnGroups = "SPI")
+  @Test(groups = "Non-SPI", dependsOnGroups = "SPI")
   public void useServletContextListener() throws IOException {
     final AtomicInteger counter = new AtomicInteger();
     
@@ -142,7 +142,7 @@ public class JerseyGuiceTest {
     assertEquals(counter.get(), 1);
   }
   
-  @Test(dependsOnGroups = "SPI")
+  @Test(dependsOnGroups = { "Non-SPI", "SPI" })
   public void checkAOP() throws IOException {
     interceptor.counter.set(0);
     
