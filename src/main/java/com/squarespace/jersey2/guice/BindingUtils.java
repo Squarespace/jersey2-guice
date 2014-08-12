@@ -24,6 +24,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -298,6 +299,23 @@ class BindingUtils {
       if (type.isAnnotationPresent(BindingAnnotation.class)) {
         return annotation;
       }
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Returns a {@link Class} for the given {@link Type} or {@code null}.
+   */
+  public static Class<?> getClass(Type type) {
+    
+    if (type instanceof Class<?>) {
+      return (Class<?>)type;
+    }
+    
+    if (type instanceof ParameterizedType) {
+      ParameterizedType pt = (ParameterizedType)type;
+      return (Class<?>)pt.getRawType();
     }
     
     return null;

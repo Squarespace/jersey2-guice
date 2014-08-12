@@ -85,7 +85,7 @@ public class JerseyGuiceTest {
   private final AbstractModule aopModule = new AbstractModule() {
     @Override
     protected void configure() {
-      bind(MyResource.class);
+      GuiceBinding.bind(binder(), MyResource.class);
       
       bindInterceptor(Matchers.any(), 
         Matchers.annotatedWith(MyAnnotation.class), 
@@ -94,7 +94,7 @@ public class JerseyGuiceTest {
   };
   
   // This *MUST* run first. Testing SPIs is not fun!
-  //@Test(groups = "SPI")
+  @Test(groups = "SPI")
   public void useSPI() throws IOException {
     if (!InjectionsUtils.hasFix()) {
       Assert.fail("This test needs Jersey 2.11+");
@@ -103,17 +103,17 @@ public class JerseyGuiceTest {
     embedded(true);
   }
   
-  //@AfterTest
+  @AfterTest
   public void reset() {
     BootstrapUtils.reset();
   }
   
-  //@Test(dependsOnGroups = "SPI")
+  @Test(dependsOnGroups = "SPI")
   public void useReflection() throws IOException {
     embedded(false);
   }
   
-  //@Test(dependsOnGroups = "SPI")
+  @Test(dependsOnGroups = "SPI")
   public void useServletContextListener() throws IOException {
     final AtomicInteger counter = new AtomicInteger();
     
@@ -142,14 +142,13 @@ public class JerseyGuiceTest {
     assertEquals(counter.get(), 1);
   }
   
-  //@Test(dependsOnGroups = "SPI")
-  @Test
+  @Test(dependsOnGroups = "SPI")
   public void checkAOP() throws IOException {
     interceptor.counter.set(0);
     
-    embedded(true, aopModule);
+    embedded(false, aopModule);
     
-    assertEquals(interceptor.counter.get(), 1);
+    assertEquals(interceptor.counter.get(), 2);
   }
   
   private void embedded(boolean useSPI, Module... extras) throws IOException {
@@ -183,7 +182,7 @@ public class JerseyGuiceTest {
     
     assertEquals(paths.length, responses.length);
     
-    // Create a new Client instance for each request
+    // Client #1: Create a new Client instance for each request
     for (int i = 0; i < paths.length; i++) {
       Client client = ClientBuilder.newClient();
       try {
@@ -197,7 +196,7 @@ public class JerseyGuiceTest {
       }
     }
     
-    // Re-Use the same Client instance for each request
+    // Client #2: Re-Use the same Client instance for each request
     Client client = ClientBuilder.newClient();
     try {
       for (int i = 0; i < paths.length; i++) {

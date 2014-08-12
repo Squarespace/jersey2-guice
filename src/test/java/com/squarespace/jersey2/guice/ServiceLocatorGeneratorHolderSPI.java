@@ -21,6 +21,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 
+import com.squarespace.jersey2.guice.GuiceServiceLocatorGenerator;
+
 /**
  * This class gets initialized via SPI.
  */

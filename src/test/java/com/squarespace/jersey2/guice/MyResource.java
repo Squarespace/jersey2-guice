@@ -49,10 +49,6 @@ public class MyResource {
   @Inject
   private Items items;
   
-  public MyResource() {
-    Thread.dumpStack();
-  }
-  
   @GET
   @Produces(MediaType.TEXT_PLAIN)
   @MyAnnotation
