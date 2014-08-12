@@ -31,7 +31,6 @@ import com.google.inject.Injector;
 // NOTE: This class must be public. Jersey/HK2 will ignore
 // it if it's package private or something like that!
 
-//@GuiceScope
 @Path(MyResource.PATH)
 public class MyResource {
 
