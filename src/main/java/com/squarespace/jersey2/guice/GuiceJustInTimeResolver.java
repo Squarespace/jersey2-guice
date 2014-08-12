@@ -31,6 +31,7 @@ import com.google.inject.Binding;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.internal.MoreTypes;
 
 /**
  * A {@link JustInTimeInjectionResolver} that is backed by {@link Guice}.
@@ -51,7 +52,7 @@ class GuiceJustInTimeResolver implements JustInTimeInjectionResolver {
   @Override
   public boolean justInTimeResolution(Injectee injectee) {
     Type type = injectee.getRequiredType();
-    Class<?> clazz = BindingUtils.getClass(type);
+    Class<?> clazz = MoreTypes.getRawType(type);
     
     if (clazz != null) {
       Binding<?> binding = findBinding(injectee);
