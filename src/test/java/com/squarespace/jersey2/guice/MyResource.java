@@ -50,6 +50,7 @@ public class MyResource {
   
   @GET
   @Produces(MediaType.TEXT_PLAIN)
+  @MyAnnotation
   public String sayHello() {
     Items other = injector.getInstance(Items.class);
     

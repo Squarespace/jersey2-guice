@@ -21,7 +21,9 @@ import static com.squarespace.jersey2.guice.BindingUtils.newServiceLocatorDescri
 import static com.squarespace.jersey2.guice.BindingUtils.newThreeThirtyInjectionResolverDescriptor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
@@ -35,7 +37,6 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.BuilderHelper;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
 import org.jvnet.hk2.internal.DefaultClassAnalyzer;
@@ -163,11 +164,14 @@ public class BootstrapUtils {
   public static Injector newInjector(ServiceLocator locator, Stage stage, List<? extends Module> modules) {
     
     List<Module> copy = new ArrayList<>(modules);
+    copy.add(GuiceBinding.INJECTOR);
     copy.add(new JerseyToGuiceModule(locator));
     
     Injector injector = createInjector(stage, copy);
     
-    link(locator, injector);
+    Set<GuiceBinding<?>> bindings = injector.getInstance(GuiceBinding.KEY);
+    
+    link(locator, injector, bindings);
     
     return injector;
   }
@@ -179,9 +183,10 @@ public class BootstrapUtils {
    * @see Injector#createChildInjector(Iterable)
    */
   public static Injector newChildInjector(Injector injector, ServiceLocator locator) {
+    
     Injector child = injector.createChildInjector(new ServiceLocatorModule(locator));
     
-    link(locator, child);
+    link(locator, child, Collections.<GuiceBinding<?>>emptySet());
     
     return child;
   }
@@ -189,7 +194,7 @@ public class BootstrapUtils {
   /**
    * This method links the {@link Injector} to the {@link ServiceLocator}.
    */
-  private static void link(ServiceLocator locator, Injector injector) {
+  private static void link(ServiceLocator locator, Injector injector, Set<? extends GuiceBinding<?>> bindings) {
     DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
     DynamicConfiguration dc = dcs.createDynamicConfiguration();
     
@@ -199,7 +204,10 @@ public class BootstrapUtils {
     dc.addActiveDescriptor(GuiceScopeContext.class);
     
     bind(locator, dc, new MessagingBinders.HeaderDelegateProviders());
-    bind(locator, dc, new InjectorBinder(injector));
+    
+    for (GuiceBinding<?> binding : bindings) {
+      bind(locator, dc, binding.newBinder(injector));
+    }
     
     dc.commit();
   }
@@ -225,23 +233,5 @@ public class BootstrapUtils {
     }
     
     return Guice.createInjector(modules);
-  }
-  
-  /**
-   * This is a HK2 {@link Binder} for the {@link Guice} {@link Injector}.
-   * It makes the {@link Injector} injectable in the HK2 world.
-   */
-  private static class InjectorBinder extends AbstractBinder {
-    
-    private final Injector injector;
-
-    public InjectorBinder(Injector injector) {
-      this.injector = injector;
-    }
-
-    @Override
-    protected void configure() {
-      bind(injector).to(Injector.class);
-    }
   }
 }

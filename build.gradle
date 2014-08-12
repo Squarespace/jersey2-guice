@@ -94,6 +94,7 @@ allprojects {
     
     compile 'com.google.code.findbugs:jsr305:3.0.0'
     compile "com.google.inject.extensions:guice-servlet:${project.guice}"
+    compile "com.google.inject.extensions:guice-multibindings:${project.guice}"
     
     compile ("org.glassfish.jersey.containers:jersey-container-servlet-core:${project.jersey}") {
       // Use Guice's javax.inject module
