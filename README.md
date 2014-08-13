@@ -66,7 +66,9 @@ The following items are available for injection (on top of [ServletModule's](htt
 AbstractModule module = new AbstractModule() {
   @Override
   protected void configure() {
-    bind(String.class).annotatedWith(Names.named("name")).toInstance("Hello, World!");
+    bind(String.class)
+      .annotatedWith(Names.named("name"))
+      .toInstance("Hello, World!");
   }
 };
 ```
