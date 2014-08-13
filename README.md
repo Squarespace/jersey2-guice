@@ -125,6 +125,32 @@ public class MyResource {
 
 ```
 
+### AOP
+
+```
+@Path("/my-resource")
+public class MyResource {
+  @GET
+  @Produces(MediaType.TEXT_PLAIN)
+  @MyAnnotation
+  public String sayHello() {
+    return "Hello, World!";
+  }
+}
+
+AbstractModule module = new AbstractModule() {
+  @Override
+  protected void configure() {
+    GuiceBinding.bind(binder(), MyResource.class);
+
+    bindInterceptor(Matchers.any(), 
+        Matchers.annotatedWith(MyAnnotation.class), 
+        <<MethodInterceptor>>);
+  }
+};
+
+```
+
 ## How it works
 
 If you're a longtime Guice & Jersey user then you've probably come across the issue with Jersey 2.0.
