@@ -141,8 +141,8 @@ allprojects {
     
     repositories {
       mavenDeployer {
-        repository(url: System.properties['RELEASE_REPOSITORY_URL'])
-        snapshotRepository(url: System.properties['SNAPSHOT_REPOSITORY_URL'])
+        repository(url: properties['RELEASE_REPOSITORY_URL'])
+        snapshotRepository(url: properties['SNAPSHOT_REPOSITORY_URL'])
       }
     }
   }
@@ -156,13 +156,13 @@ allprojects {
         // stored in the ~/.gradle/gradle.properties file.
         
         repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-          authentication(userName: System.properties['MAVEN_CENTRAL_USERNAME'], 
-            password: System.properties['MAVEN_CENTRAL_PASSWORD'])
+          authentication(userName: properties['MAVEN_CENTRAL_USERNAME'], 
+            password: properties['MAVEN_CENTRAL_PASSWORD'])
         }
   
         snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-          authentication(userName: System.properties['MAVEN_CENTRAL_USERNAME'], 
-            password: System.properties['MAVEN_CENTRAL_PASSWORD'])
+          authentication(userName: properties['MAVEN_CENTRAL_USERNAME'], 
+            password: properties['MAVEN_CENTRAL_PASSWORD'])
         }
         
         pom.project {
@@ -196,5 +196,4 @@ allprojects {
   }
 }
 
-//createReleaseTag.dependsOn ':uploadArchives', ':uploadSquarespace'
-createReleaseTag.dependsOn ':uploadArchives'
+createReleaseTag.dependsOn ':uploadArchives', ':uploadSquarespace'
