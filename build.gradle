@@ -152,6 +152,9 @@ allprojects {
       mavenDeployer {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
         
+        // NOTE: The 'MAVEN_CENTRAL_USERNAME' and 'MAVEN_CENTRAL_PASSWORD' are
+        // stored in the ~/.gradle/gradle.properties file.
+        
         repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
           authentication(userName: System.properties['MAVEN_CENTRAL_USERNAME'], 
             password: System.properties['MAVEN_CENTRAL_PASSWORD'])
