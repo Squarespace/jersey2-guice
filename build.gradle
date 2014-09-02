@@ -64,6 +64,8 @@ allprojects {
     jersey = System.getProperty('jersey', '2.11')
     
     isReleaseVersion = !version.endsWith('-SNAPSHOT')
+    
+    
   }
   
   task integrationTest(type: Test) {
@@ -154,6 +156,9 @@ allprojects {
         
         // NOTE: The 'MAVEN_CENTRAL_USERNAME' and 'MAVEN_CENTRAL_PASSWORD' are
         // stored in the ~/.gradle/gradle.properties file.
+        
+        println(properties['MAVEN_CENTRAL_USERNAME'])
+        println(properties['MAVEN_CENTRAL_PASSWORD'])
         
         repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
           authentication(userName: properties['MAVEN_CENTRAL_USERNAME'], 
