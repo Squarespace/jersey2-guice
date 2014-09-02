@@ -24,8 +24,6 @@ import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.JustInTimeInjectionResolver;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -37,8 +35,6 @@ import com.google.inject.internal.MoreTypes;
  * A {@link JustInTimeInjectionResolver} that is backed by {@link Guice}.
  */
 class GuiceJustInTimeResolver implements JustInTimeInjectionResolver {
-
-  private static final Logger LOG = LoggerFactory.getLogger(GuiceJustInTimeResolver.class);
   
   private final ServiceLocator locator;
   
@@ -78,17 +74,19 @@ class GuiceJustInTimeResolver implements JustInTimeInjectionResolver {
    */
   private Binding<?> findBinding(Injectee injectee) {
     Key<?> key = BindingUtils.toKey(injectee);
-    if (key != null) {
-      // We've to use Injector#getBinding() to cover Just-In-Time bindings
-      // which may fail with an Exception because Guice doesn't know how to
-      // construct the requested object.
-      try {
-        return injector.getBinding(key);
-      } catch (Exception err) {
-        LOG.error("Exception: injectee={}, key={}", injectee, key, err);
-      }
+    if (key == null) {
+      return null;
     }
     
-    return null;
+    // Classes with a @Contract annotation are SPIs. They either exist or
+    // not. They must be explicit bindings in the world of Guice.
+    if (BindingUtils.isContract(injectee)) {
+      return injector.getExistingBinding(key);
+    }
+    
+    // We've to use Injector#getBinding() to cover Just-In-Time bindings
+    // which may fail with an Exception because Guice doesn't know how to
+    // construct the requested object.
+    return injector.getBinding(key);
   }
 }
