@@ -59,15 +59,6 @@ allprojects {
     }
   }
   
-  project.ext {
-    guice = System.getProperty('guice', '4.0-beta4')
-    jersey = System.getProperty('jersey', '2.11')
-    
-    isReleaseVersion = !version.endsWith('-SNAPSHOT')
-    
-    
-  }
-  
   task integrationTest(type: Test) {
     useTestNG()
     
@@ -90,110 +81,124 @@ allprojects {
     exclude '**/*IT.*'
     include '**/*Test.*'
   }
+}
+
+project.ext {
+  guice = System.getProperty('guice', '4.0-beta4')
+  jersey = System.getProperty('jersey', '2.11')
   
-  dependencies {
-    compile 'org.slf4j:slf4j-api:1.7.7'
-    
-    compile 'com.google.code.findbugs:jsr305:3.0.0'
-    compile "com.google.inject.extensions:guice-servlet:${project.guice}"
-    compile "com.google.inject.extensions:guice-multibindings:${project.guice}"
-    
-    compile ("org.glassfish.jersey.containers:jersey-container-servlet-core:${project.jersey}") {
-      // Use Guice's javax.inject module
-      exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
-    }
-    
-    provided 'javax.servlet:javax.servlet-api:3.1.0'
-    
-    testCompile 'org.eclipse.jetty:jetty-servlet:9.2.0.v20140526'
-    testCompile 'org.testng:testng:6.8.8'
+  isReleaseVersion = !version.endsWith('-SNAPSHOT')
+}
+
+dependencies {
+  compile 'org.slf4j:slf4j-api:1.7.7'
+  
+  compile 'com.google.code.findbugs:jsr305:3.0.0'
+  compile "com.google.inject.extensions:guice-servlet:${project.guice}"
+  compile "com.google.inject.extensions:guice-multibindings:${project.guice}"
+  
+  compile ("org.glassfish.jersey.containers:jersey-container-servlet-core:${project.jersey}") {
+    // Use Guice's javax.inject module
+    exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
   }
   
-  task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-  }
+  provided 'javax.servlet:javax.servlet-api:3.1.0'
   
-  task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-  }
+  testCompile 'org.eclipse.jetty:jetty-servlet:9.2.0.v20140526'
+  testCompile 'org.testng:testng:6.8.8'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+artifacts {
+  archives sourcesJar 
+  archives javadocJar
+}
+
+javadoc {
+  classpath += [configurations.provided]
   
-  artifacts {
-    archives sourcesJar 
-    archives javadocJar
-  }
+  options.links('http://docs.oracle.com/javase/7/docs/api/', 
+    'http://docs.oracle.com/javaee/7/api/',
+    'http://google-guice.googlecode.com/git/javadoc/',
+    'https://hk2.java.net/2.3.0-b10/apidocs/')
+}
+
+signing {
+  required { isReleaseVersion && gradle.taskGraph.hasTask('uploadArchives') }
+  sign configurations.archives
+}
+
+task uploadSquarespace(type: Upload) {
+  configuration = configurations.archives
   
-  javadoc {
-    classpath += configurations.provided
-    
-    options.links('http://docs.oracle.com/javase/7/docs/api/', 
-      'http://docs.oracle.com/javaee/7/api/',
-      'http://google-guice.googlecode.com/git/javadoc/',
-      'https://hk2.java.net/2.3.0-b10/apidocs/')
-  }
-  
-  signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask('uploadArchives') }
-    sign configurations.archives
-  }
-  
-  task uploadSquarespace(type: Upload) {
-    configuration = configurations.archives
-    
-    repositories {
-      mavenDeployer {
-        repository(url: properties['RELEASE_REPOSITORY_URL'])
-        snapshotRepository(url: properties['SNAPSHOT_REPOSITORY_URL'])
+  repositories {
+    mavenDeployer {
+      if (project.hasProperty('RELEASE_REPOSITORY_URL') 
+          && project.hasProperty('SNAPSHOT_REPOSITORY_URL')) {
+        repository(url: RELEASE_REPOSITORY_URL)
+        snapshotRepository(url: SNAPSHOT_REPOSITORY_URL)
+        
+      } else {
+        logger.error("RELEASE_REPOSITORY_URL and/or SNAPSHOT_REPOSITORY_URL missing.")
       }
     }
   }
-  
-  uploadArchives {
-    repositories {
-      mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-        
-        // NOTE: The 'MAVEN_CENTRAL_USERNAME' and 'MAVEN_CENTRAL_PASSWORD' are
-        // stored in the ~/.gradle/gradle.properties file.
-        
-        println(properties['MAVEN_CENTRAL_USERNAME'])
-        println(properties['MAVEN_CENTRAL_PASSWORD'])
+}
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+      
+      // NOTE: The 'MAVEN_CENTRAL_USERNAME' and 'MAVEN_CENTRAL_PASSWORD' are
+      // stored in the ~/.gradle/gradle.properties file.
+      
+      if (project.hasProperty('MAVEN_CENTRAL_USERNAME') 
+          && project.hasProperty('MAVEN_CENTRAL_PASSWORD')) {
         
         repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-          authentication(userName: properties['MAVEN_CENTRAL_USERNAME'], 
-            password: properties['MAVEN_CENTRAL_PASSWORD'])
+          authentication(userName: MAVEN_CENTRAL_USERNAME, password: MAVEN_CENTRAL_PASSWORD)
         }
   
         snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-          authentication(userName: properties['MAVEN_CENTRAL_USERNAME'], 
-            password: properties['MAVEN_CENTRAL_PASSWORD'])
+          authentication(userName: MAVEN_CENTRAL_USERNAME, password: MAVEN_CENTRAL_PASSWORD)
         }
-        
-        pom.project {
-          name 'Jersey 2.0 w/ Guice'
-          packaging 'jar'
-          description 'This library adds support for Jersey 2.0 w/ Guice'
+      } else {
+        logger.error("MAVEN_CENTRAL_USERNAME and/or MAVEN_CENTRAL_PASSWORD missing.")
+      }
+      
+      pom.project {
+        name 'Jersey 2.0 w/ Guice'
+        packaging 'jar'
+        description 'This library adds support for Jersey 2.0 w/ Guice'
+        url 'https://github.com/Squarespace/jersey2-guice'
+
+        scm {
+          connection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
+          developerConnection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
           url 'https://github.com/Squarespace/jersey2-guice'
-  
-          scm {
-            connection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
-            developerConnection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
-            url 'https://github.com/Squarespace/jersey2-guice'
+        }
+
+        licenses {
+          license {
+            name 'The Apache Software License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
           }
-  
-          licenses {
-            license {
-              name 'The Apache Software License, Version 2.0'
-              url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-            }
-          }
-  
-          developers {
-            developer {
-              id 'Squarespace, Inc.'
-              url 'http://www.squarespace.com'
-            }
+        }
+
+        developers {
+          developer {
+            id 'Squarespace, Inc.'
+            url 'http://www.squarespace.com'
           }
         }
       }
