@@ -43,6 +43,7 @@ import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.NamedImpl;
 import org.glassfish.hk2.utilities.reflection.ParameterizedTypeImpl;
+import org.glassfish.jersey.spi.Contract;
 import org.jvnet.hk2.annotations.Optional;
 import org.jvnet.hk2.internal.ConstantActiveDescriptor;
 
@@ -179,6 +180,16 @@ class BindingUtils {
     }
     
     return false;
+  }
+  
+  /**
+   * Returns {@code true} if the {@link Injectee} has a Jersey SPI {@link Contract}.
+   * 
+   * @see Contract
+   */
+  public static boolean isContract(Injectee injectee) {
+    Type type = injectee.getRequiredType();
+    return ((Class<?>)type).isAnnotationPresent(Contract.class);
   }
   
   /**
