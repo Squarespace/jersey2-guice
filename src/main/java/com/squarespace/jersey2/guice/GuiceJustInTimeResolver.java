@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Binding;
+import com.google.inject.ConfigurationException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -37,7 +38,7 @@ import com.google.inject.internal.MoreTypes;
  * A {@link JustInTimeInjectionResolver} that is backed by {@link Guice}.
  */
 class GuiceJustInTimeResolver implements JustInTimeInjectionResolver {
-
+  
   private static final Logger LOG = LoggerFactory.getLogger(GuiceJustInTimeResolver.class);
   
   private final ServiceLocator locator;
@@ -82,10 +83,16 @@ class GuiceJustInTimeResolver implements JustInTimeInjectionResolver {
       // We've to use Injector#getBinding() to cover Just-In-Time bindings
       // which may fail with an Exception because Guice doesn't know how to
       // construct the requested object.
+      
       try {
         return injector.getBinding(key);
-      } catch (Exception err) {
-        LOG.error("Exception: injectee={}, key={}", injectee, key, err);
+      } catch (ConfigurationException err) {
+        
+        if (!BindingUtils.isNullable(injectee)) {
+          throw err;
+        }
+        
+        LOG.warn("Exception: injectee={}, key={}", injectee, key, err);
       }
     }
     
