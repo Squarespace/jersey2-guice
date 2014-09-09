@@ -150,7 +150,7 @@ public class BootstrapUtils {
   }
   
   /**
-   * @see #newInjector(ServiceLocator, Stage, List)
+   * @see #newInjector(ServiceLocator, Stage, Iterable)
    */
   public static Injector newInjector(ServiceLocator locator, Iterable<? extends Module> modules) {
     return newInjector(locator, null, modules);
