@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.squarespace.jersey2.guice;
 
 import org.glassfish.hk2.api.InjectionResolver;

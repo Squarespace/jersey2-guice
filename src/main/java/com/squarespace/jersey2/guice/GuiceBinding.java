@@ -22,13 +22,11 @@ import java.util.Set;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
-import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
@@ -79,18 +77,6 @@ public class GuiceBinding<T> {
       .addBinding()
       .toInstance(new GuiceBinding<>(key));
   }
-  
-  /**
-   * This {@link Module} makes the {@link Injector} available to injection within HK2.
-   * 
-   * @see GuiceBinding#bind(Binder, Key)
-   */
-  static final AbstractModule INJECTOR = new AbstractModule() {
-    @Override
-    protected void configure() {
-      GuiceBinding.bind(binder(), Injector.class);
-    }
-  };
   
   private final Key<T> key;
   
