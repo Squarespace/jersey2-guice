@@ -38,7 +38,7 @@ import com.google.inject.name.Names;
  * The {@link GuiceBinding} makes {@link Guice} {@link Binding}s available for
  * injection within HK2.
  * 
- * NOTE: This is a bit tricky! The idea is to use {@link #bind(Binder, Class)} & Co. to 
+ * NOTE: This is a bit tricky! The idea is to use {@link #bind(Binder, Class)} &amp; Co. to 
  * add everything we want to make available in HK2 to a {@link Guice} {@link Multibinder}.
  * Once the {@link Injector} is created we're getting the {@link Multibinder} {@link Map}
  * and add everything that is in there to the {@link ServiceLocator}.
