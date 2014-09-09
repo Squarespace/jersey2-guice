@@ -152,7 +152,7 @@ public class BootstrapUtils {
   /**
    * @see #newInjector(ServiceLocator, Stage, List)
    */
-  public static Injector newInjector(ServiceLocator locator, List<? extends Module> modules) {
+  public static Injector newInjector(ServiceLocator locator, Iterable<? extends Module> modules) {
     return newInjector(locator, null, modules);
   }
   
@@ -160,18 +160,21 @@ public class BootstrapUtils {
    * Creates and returns a {@link Injector}.
    * 
    * @see #newServiceLocator(String, ServiceLocator)
+   * @see #link(ServiceLocator, Injector)
+   * @see BootstrapModule
    */
-  public static Injector newInjector(ServiceLocator locator, Stage stage, List<? extends Module> modules) {
+  public static Injector newInjector(ServiceLocator locator, Stage stage, Iterable<? extends Module> modules) {
     
-    List<Module> copy = new ArrayList<>(modules);
-    copy.add(GuiceBinding.INJECTOR);
-    copy.add(new JerseyToGuiceModule(locator));
+    List<Module> copy = new ArrayList<>();
+    for (Module module : modules) {
+      copy.add(module);
+    }
+    
+    copy.add(new BootstrapModule(locator));
     
     Injector injector = createInjector(stage, copy);
     
-    Set<GuiceBinding<?>> bindings = injector.getInstance(GuiceBinding.KEY);
-    
-    link(locator, injector, bindings);
+    link(locator, injector);
     
     return injector;
   }
@@ -193,6 +196,18 @@ public class BootstrapUtils {
   
   /**
    * This method links the {@link Injector} to the {@link ServiceLocator}.
+   * 
+   * @see #newInjector(ServiceLocator, Iterable)
+   * @see #newInjector(ServiceLocator, Stage, Iterable)
+   */
+  public static void link(ServiceLocator locator, Injector injector) {
+    Set<GuiceBinding<?>> bindings = injector.getInstance(GuiceBinding.KEY);
+    link(locator, injector, bindings);
+  }
+  
+  /**
+   * @see #link(ServiceLocator, Injector)
+   * @see #newChildInjector(Injector, ServiceLocator)
    */
   private static void link(ServiceLocator locator, Injector injector, Set<? extends GuiceBinding<?>> bindings) {
     DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
@@ -227,7 +242,7 @@ public class BootstrapUtils {
    * @see Guice#createInjector(Iterable)
    * @see Guice#createInjector(Stage, Iterable)
    */
-  private static Injector createInjector(Stage stage, List<? extends Module> modules) {
+  private static Injector createInjector(Stage stage, Iterable<? extends Module> modules) {
     if (stage != null) {
       return Guice.createInjector(stage, modules);
     }
