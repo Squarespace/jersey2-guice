@@ -18,8 +18,10 @@ package com.squarespace.jersey2.guice;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.Set;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import com.google.inject.Binder;
@@ -35,6 +37,14 @@ import com.google.inject.name.Names;
 /**
  * The {@link GuiceBinding} makes {@link Guice} {@link Binding}s available for
  * injection within HK2.
+ * 
+ * NOTE: This is a bit tricky! The idea is to use {@link #bind(Binder, Class)} & Co. to 
+ * add everything we want to make available in HK2 to a {@link Guice} {@link Multibinder}.
+ * Once the {@link Injector} is created we're getting the {@link Multibinder} {@link Map}
+ * and add everything that is in there to the {@link ServiceLocator}.
+ * 
+ * @see Multibinder
+ * @see #newBinder(Injector)
  */
 public class GuiceBinding<T> {
   
