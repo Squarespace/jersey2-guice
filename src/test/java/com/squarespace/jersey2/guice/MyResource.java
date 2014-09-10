@@ -16,6 +16,7 @@
 
 package com.squarespace.jersey2.guice;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotSame;
 import static org.testng.Assert.assertSame;
 
@@ -25,6 +26,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
 import com.google.inject.Injector;
 
@@ -38,6 +40,8 @@ public class MyResource {
   
   public static final String RESPONSE = "MyResource.RESPONSE: %s";
   
+  private final UriInfo info;
+  
   @Inject
   private Injector injector;
   
@@ -48,14 +52,22 @@ public class MyResource {
   @Inject
   private Items items;
   
+  @Inject
+  public MyResource(UriInfo info) {
+    this.info = info;
+  }
+  
   @GET
   @Produces(MediaType.TEXT_PLAIN)
   @MyAnnotation
   public String sayHello() {
-    Items other = injector.getInstance(Items.class);
+    Items otherItems = injector.getInstance(Items.class);
     
-    assertNotSame(other, items);
-    assertSame(other.request, items.request);
+    assertNotSame(otherItems, items);
+    assertSame(otherItems.request, items.request);
+    
+    UriInfo otherInfo = injector.getInstance(UriInfo.class);
+    assertEquals(otherInfo.getPath(), info.getPath());
     
     return String.format(RESPONSE, value);
   }
