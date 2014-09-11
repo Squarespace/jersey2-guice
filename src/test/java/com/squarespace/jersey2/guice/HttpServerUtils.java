@@ -37,14 +37,16 @@ class HttpServerUtils {
   
   private HttpServerUtils() {}
   
-  public static HttpServer newHttpServer(Class<?> rsrc) throws IOException {
-    return newHttpServer(rsrc, null);
+  public static HttpServer newHttpServer(Class<?>... rsrc) throws IOException {
+    return newHttpServer((EventListener)null, rsrc);
   }
   
-  public static HttpServer newHttpServer(Class<?> rsrc, EventListener listener) throws IOException {
+  public static HttpServer newHttpServer(EventListener listener, Class<?>... rsrc) throws IOException {
     ResourceConfig config = new ResourceConfig();
     
-    config.register(rsrc);
+    for (Class<?> clazz : rsrc) {
+      config.register(clazz);
+    }
     
     ServletContainer servletContainer = new ServletContainer(config);
     

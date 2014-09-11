@@ -134,7 +134,7 @@ public class JerseyGuiceTest {
       }
     };
     
-    try (HttpServer server = HttpServerUtils.newHttpServer(MyResource.class, listener)) {
+    try (HttpServer server = HttpServerUtils.newHttpServer(listener, MyResource.class)) {
       check();
     }
     
