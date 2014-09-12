@@ -22,7 +22,9 @@ import static com.squarespace.jersey2.guice.BindingUtils.newThreeThirtyInjection
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,11 +45,17 @@ import org.jvnet.hk2.internal.DefaultClassAnalyzer;
 import org.jvnet.hk2.internal.DynamicConfigurationImpl;
 import org.jvnet.hk2.internal.DynamicConfigurationServiceImpl;
 import org.jvnet.hk2.internal.ServiceLocatorImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.inject.Binding;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.google.inject.servlet.ServletModule;
+import com.google.inject.spi.ElementSource;
 
 /**
  * An utility class to bootstrap HK2's {@link ServiceLocator}s and {@link Guice}'s {@link Injector}s.
@@ -57,9 +65,16 @@ import com.google.inject.Stage;
  */
 public class BootstrapUtils {
   
+  private static final Logger LOG = LoggerFactory.getLogger(BootstrapUtils.class);
+  
   private static final String PREFIX = "GuiceServiceLocator-";
   
   private static final AtomicInteger NTH = new AtomicInteger();
+  
+  /**
+   * @see ServletModule
+   */
+  private static final String INTERNAL_SERVLET_MODULE = ".InternalServletModule";
   
   private BootstrapUtils() {}
   
@@ -187,9 +202,9 @@ public class BootstrapUtils {
    */
   public static Injector newChildInjector(Injector injector, ServiceLocator locator) {
     
-    Injector child = injector.createChildInjector(new ServiceLocatorModule(locator));
+    Injector child = injector.createChildInjector(new InternalServiceLocatorModule(locator));
     
-    link(locator, child, Collections.<GuiceBinding<?>>emptySet());
+    link(locator, child, Collections.<Binder>emptySet());
     
     return child;
   }
@@ -201,15 +216,20 @@ public class BootstrapUtils {
    * @see #newInjector(ServiceLocator, Stage, Iterable)
    */
   public static void link(ServiceLocator locator, Injector injector) {
-    Set<GuiceBinding<?>> bindings = injector.getInstance(GuiceBinding.KEY);
-    link(locator, injector, bindings);
+    
+    Map<Key<?>, Binding<?>> bindings = injector.getBindings();
+    Set<Binder> binders = toBinders(bindings);
+    
+    link(locator, injector, binders);
   }
   
   /**
    * @see #link(ServiceLocator, Injector)
    * @see #newChildInjector(Injector, ServiceLocator)
    */
-  private static void link(ServiceLocator locator, Injector injector, Set<? extends GuiceBinding<?>> bindings) {
+  private static void link(ServiceLocator locator, 
+      Injector injector, Iterable<? extends Binder> binders) {
+    
     DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
     DynamicConfiguration dc = dcs.createDynamicConfiguration();
     
@@ -220,8 +240,8 @@ public class BootstrapUtils {
     
     bind(locator, dc, new MessagingBinders.HeaderDelegateProviders());
     
-    for (GuiceBinding<?> binding : bindings) {
-      bind(locator, dc, binding.newBinder(injector));
+    for (Binder binder : binders) {
+      bind(locator, dc, binder);
     }
     
     dc.commit();
@@ -248,5 +268,60 @@ public class BootstrapUtils {
     }
     
     return Guice.createInjector(modules);
+  }
+  
+  /**
+   * Turns the given Guice {@link Binding}s into HK2 {@link Binder}s.
+   */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private static Set<Binder> toBinders(Map<Key<?>, Binding<?>> bindings) {
+    Set<Binder> binders = new HashSet<>();
+    
+    for (Map.Entry<Key<?>, Binding<?>> entry : bindings.entrySet()) {
+      Key<?> key = entry.getKey();
+      Binding<?> binding = entry.getValue();
+      
+      Object source = binding.getSource();
+      if (!(source instanceof ElementSource)) {
+        
+        // Things like the Injector itself don't have an ElementSource.
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("Adding binding: key={}, source={}", key, source);
+        }
+        
+        binders.add(new GuiceBinder(key, binding));
+        continue;
+      }
+      
+      ElementSource element = (ElementSource)source;
+      List<String> names = element.getModuleClassNames();
+      String name = names.get(0);
+      
+      // Skip everything in Guice's InternalServletModule
+      if (name.endsWith(INTERNAL_SERVLET_MODULE)) {
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("Ignoring binding for {} in {}", key, name);
+        }
+        continue;
+      }
+      
+      // Skip everything that is declared in a JerseyModule
+      try {
+        Class<?> module = Class.forName(name);
+        if (JerseyModule.class.isAssignableFrom(module)) {
+          if (LOG.isTraceEnabled()) {
+            LOG.trace("Ignoring binding {} in {}", key, module);
+          }
+          
+          continue;
+        }
+      } catch (ClassNotFoundException err) {
+        throw new IllegalStateException("name=" + name, err);
+      }
+      
+      binders.add(new GuiceBinder(key, binding));
+    }
+    
+    return binders;
   }
 }

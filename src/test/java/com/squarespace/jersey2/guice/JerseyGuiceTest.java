@@ -85,7 +85,7 @@ public class JerseyGuiceTest {
   private final AbstractModule aopModule = new AbstractModule() {
     @Override
     protected void configure() {
-      GuiceBinding.bind(binder(), MyResource.class);
+      bind(MyResource.class);
       
       bindInterceptor(Matchers.any(), 
         Matchers.annotatedWith(MyAnnotation.class), 
@@ -134,7 +134,7 @@ public class JerseyGuiceTest {
       }
     };
     
-    try (HttpServer server = HttpServerUtils.newHttpServer(MyResource.class, listener)) {
+    try (HttpServer server = HttpServerUtils.newHttpServer(listener, MyResource.class)) {
       check();
     }
     

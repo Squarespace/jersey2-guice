@@ -43,7 +43,7 @@ import com.google.inject.Injector;
  * callers will get their own copy of {@link ServiceLocator} that is still backed by the same 
  * {@link Injector} instance. 
  * 
- * @see ServiceLocatorModule
+ * @see InternalServiceLocatorModule
  */
 class GuiceServiceLocatorGenerator implements ServiceLocatorGenerator {
   

@@ -18,19 +18,22 @@ package com.squarespace.jersey2.guice;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.name.Names;
 
 /**
+ * The {@link InternalServiceLocatorModule} is used in conjunction with
+ * child {@link ServiceLocator}s and child {@link Injector}s.
+ * 
  * @see GuiceServiceLocatorGenerator
  */
-class ServiceLocatorModule extends AbstractModule {
+class InternalServiceLocatorModule extends JerseyModule {
 
-  public static final String SERVICE_LOCATOR = "ServiceLocatorModule.SERVICE_LOCATOR";
+  public static final String SERVICE_LOCATOR = "InternalServiceLocatorModule.SERVICE_LOCATOR";
   
   private final ServiceLocator locator;
   
-  ServiceLocatorModule(ServiceLocator locator) {
+  InternalServiceLocatorModule(ServiceLocator locator) {
     this.locator = locator;
   }
 
