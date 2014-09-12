@@ -19,28 +19,11 @@ package com.squarespace.jersey2.guice;
 import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 /**
- * This module provides bindings for HK2's {@link ServiceLocator} and 
- * {@link Guice}'s {@link Injector}.
- * 
- * @see BootstrapUtils#newInjector(ServiceLocator, Iterable)
- * @see BootstrapUtils#newInjector(ServiceLocator, com.google.inject.Stage, Iterable)
+ * Bindings declared in {@link JerseyModule}s are excluded from 
+ * being exposed to HK2's {@link ServiceLocator}.
  */
-public class BootstrapModule extends AbstractModule {
-  
-  private final ServiceLocator locator;
-  
-  public BootstrapModule(ServiceLocator locator) {
-    this.locator = locator;
-  }
+public abstract class JerseyModule extends AbstractModule {
 
-  @Override
-  protected void configure() {
-    
-    // Make some HK2 stuff available in Guice
-    install(new InternalJerseyModule(locator));
-  }
 }

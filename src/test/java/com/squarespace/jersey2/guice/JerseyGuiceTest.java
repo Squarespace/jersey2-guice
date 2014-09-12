@@ -85,7 +85,7 @@ public class JerseyGuiceTest {
   private final AbstractModule aopModule = new AbstractModule() {
     @Override
     protected void configure() {
-      GuiceBinding.bind(binder(), MyResource.class);
+      bind(MyResource.class);
       
       bindInterceptor(Matchers.any(), 
         Matchers.annotatedWith(MyAnnotation.class), 

@@ -32,6 +32,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
@@ -49,6 +50,13 @@ public class SingletonResourceTest {
     
     List<Module> modules = new ArrayList<>();
     modules.add(new ServletModule());
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(MySingletonResource.class);
+        bind(MyGuiceSingletonResource.class);
+      }
+    });
     
     @SuppressWarnings("unused")
     Injector injector = BootstrapUtils.newInjector(locator, modules);
@@ -81,10 +89,7 @@ public class SingletonResourceTest {
               expected = value;
             } else {
               assertNotNull(expected);
-              assertEquals(value, expected, 
-                  "value=" + value 
-                  + ", expected=" + expected 
-                  + ", path=" + paths[i]);
+              assertEquals(value, expected, "path=" + paths[i]);
             }
             
         } finally {

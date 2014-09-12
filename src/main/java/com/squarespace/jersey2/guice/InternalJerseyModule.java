@@ -16,12 +16,7 @@
 
 package com.squarespace.jersey2.guice;
 
-import static com.squarespace.jersey2.guice.BindingUtils.toThreeThirtyNamed;
-
-import java.lang.annotation.Annotation;
-
 import javax.inject.Provider;
-import javax.inject.Qualifier;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
@@ -31,13 +26,12 @@ import javax.ws.rs.ext.Providers;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.servlet.RequestScoped;
 
 /**
- * The {@link JerseyToGuiceModule} provides a "bridge" from HK2 to {@link Guice}
- * and makes the following items available:
+ * The {@link InternalJerseyModule} provides a "bridge" from HK2 to {@link Guice}
+ * and makes the following items available for injection:
  * 
  * {@link ServiceLocator}
  * {@link Application}
@@ -48,11 +42,11 @@ import com.google.inject.servlet.RequestScoped;
  * {@link SecurityContext}
  * {@link Request}
  */
-class JerseyToGuiceModule extends AbstractModule {
+class InternalJerseyModule extends JerseyModule {
 
   private final ServiceLocator locator;
   
-  public JerseyToGuiceModule(ServiceLocator locator) {
+  public InternalJerseyModule(ServiceLocator locator) {
     this.locator = locator;
   }
   
@@ -83,50 +77,17 @@ class JerseyToGuiceModule extends AbstractModule {
       .in(RequestScoped.class);
   }
   
-  /**
-   * Takes the given array of {@link Annotation}s and replaces all
-   * {@link com.google.inject.name.Named} with {@link javax.inject.Named}.
-   * 
-   * We do it because HK2 doesn't know about {@link Guice}'s version of named
-   * and because it's not a {@link Qualifier} it's being ignored. There
-   * is no way to make HK2 aware of the other {@code Named} annotation and 
-   * the only option is to rewrite it.
-   */
-  private static Annotation[] adjust(Annotation... qualifiers) {
-    for (int i = 0; i < qualifiers.length; i++) {
-      Annotation qualifier = qualifiers[i];
-      if (qualifier instanceof com.google.inject.name.Named) {
-        qualifiers[i] = toThreeThirtyNamed((com.google.inject.name.Named)qualifier);
-      }
-    }
-    return qualifiers;
-  }
-  
   private class JerseyProvider<T> implements Provider<T> {
     
     private final Class<T> type;
-
-    private final String name;
     
-    private final Annotation[] qualifiers;
-    
-    public JerseyProvider(Class<T> type, Annotation... qualifiers) {
-      this(type, (String)null, qualifiers);
-    }
-    
-    public JerseyProvider(Class<T> type, String name, Annotation... qualifiers) {
+    public JerseyProvider(Class<T> type) {
       this.type = type;
-      this.name = name;
-      this.qualifiers = adjust(qualifiers);
     }
     
     @Override
     public T get() {
-      if (name != null) {
-        return locator.getService(type, name, qualifiers);
-      }
-      
-      return locator.getService(type, qualifiers);
+      return locator.getService(type);
     }
   }
 }
