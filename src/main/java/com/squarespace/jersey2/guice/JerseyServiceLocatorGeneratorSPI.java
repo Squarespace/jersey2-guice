@@ -55,7 +55,7 @@ public abstract class JerseyServiceLocatorGeneratorSPI implements ServiceLocator
     this.locator = BootstrapUtils.newServiceLocator();
     this.injector = BootstrapUtils.newInjector(locator, stage, modules);
     
-    this.generator = new GuiceServiceLocatorGenerator(locator);
+    this.generator = new GuiceServiceLocatorGeneratorImpl(locator);
     RuntimeDelegate.setInstance(new GuiceRuntimeDelegate(locator));
   }
   

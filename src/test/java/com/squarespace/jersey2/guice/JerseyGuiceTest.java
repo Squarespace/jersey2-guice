@@ -17,6 +17,7 @@
 package com.squarespace.jersey2.guice;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -174,6 +175,7 @@ public class JerseyGuiceTest {
   }
   
   private void check() throws IOException {
+    assertTrue(BootstrapUtils.isInstalled(), "jersey2-guice is not installed");
     
     String url = "http://localhost:" + HttpServerUtils.PORT;
     

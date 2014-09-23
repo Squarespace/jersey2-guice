@@ -25,7 +25,7 @@ import com.google.inject.name.Names;
  * The {@link InternalServiceLocatorModule} is used in conjunction with
  * child {@link ServiceLocator}s and child {@link Injector}s.
  * 
- * @see GuiceServiceLocatorGenerator
+ * @see GuiceServiceLocatorGeneratorImpl
  */
 class InternalServiceLocatorModule extends JerseyModule {
 

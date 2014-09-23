@@ -79,6 +79,26 @@ public class BootstrapUtils {
   private BootstrapUtils() {}
   
   /**
+   * Returns {@code true} if Jersey2-Guice is installed.
+   */
+  public static boolean isInstalled() {
+    List<ServiceLocatorGenerator> generators 
+      = InjectionsUtils.getServiceLocatorGenerators();
+    
+    if (!generators.isEmpty()) {
+      for (ServiceLocatorGenerator generator : generators) {
+        if (!(generator instanceof GuiceServiceLocatorGenerator)) {
+          return false;
+        }
+      }
+      
+      return true;
+    }
+    
+    return false;
+  }
+  
+  /**
    * Restores Jersey's default state.
    * 
    * @see ServiceLocatorGeneratorImpl
@@ -93,11 +113,11 @@ public class BootstrapUtils {
    * @see #install(ServiceLocatorGenerator, ServiceLocator)
    */
   public static void install(ServiceLocator locator) {
-    install(new GuiceServiceLocatorGenerator(locator), locator);
+    install(new GuiceServiceLocatorGeneratorImpl(locator), locator);
   }
   
   /**
-   * Installs the given {@link GuiceServiceLocatorGenerator} and {@link ServiceLocator} using reflection.
+   * Installs the given {@link GuiceServiceLocatorGeneratorImpl} and {@link ServiceLocator} using reflection.
    *
    * @see InjectionsUtils#install(org.glassfish.hk2.extension.ServiceLocatorGenerator)
    * @see RuntimeDelegate#setInstance(RuntimeDelegate)

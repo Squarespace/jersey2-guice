@@ -18,6 +18,8 @@ package com.squarespace.jersey2.guice;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
@@ -76,6 +78,40 @@ class InjectionsUtils {
     }
   }
   
+  /**
+   * Returns the currently installed {@link ServiceLocatorGenerator}s.
+   */
+  public static List<ServiceLocatorGenerator> getServiceLocatorGenerators() {
+    List<ServiceLocatorGenerator> dst = new ArrayList<>();
+    
+    try {
+      
+      if (!hasFix()) {
+        Field field = Injections.class.getDeclaredField(GENERATOR_FIELD);
+        ServiceLocatorGenerator generator = (ServiceLocatorGenerator)get(field, null);
+        
+        if (generator != null) {
+          dst.add(generator);
+        }
+      }
+      
+      ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
+      Class<?> clazz = factory.getClass();
+      
+      Field field = clazz.getDeclaredField(DEFAULT_GENERATOR_FIELD);
+      ServiceLocatorGenerator generator = (ServiceLocatorGenerator)get(field, factory);
+    
+      if (generator != null) {
+        dst.add(generator);
+      }
+      
+    } catch (NoSuchFieldException | IllegalAccessException | SecurityException err) {
+      throw new IllegalStateException(err);
+    }
+    
+    return dst;
+  }
+  
   private static void set(Field field, Object instance, Object value) throws  IllegalAccessException, NoSuchFieldException, SecurityException {
     field.setAccessible(true);
     
@@ -90,6 +126,11 @@ class InjectionsUtils {
     } else {
       field.set(instance, value);
     }
+  }
+  
+  private static Object get(Field field, Object instance) throws  IllegalAccessException, NoSuchFieldException, SecurityException {
+    field.setAccessible(true);
+    return field.get(instance);
   }
   
   private static void setModifiers(Field dst, int modifiers) throws IllegalAccessException, NoSuchFieldException, SecurityException {

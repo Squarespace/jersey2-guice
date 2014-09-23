@@ -21,17 +21,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 
-import com.squarespace.jersey2.guice.GuiceServiceLocatorGenerator;
-
 /**
  * This class gets initialized via SPI.
  */
-public class ServiceLocatorGeneratorHolderSPI implements ServiceLocatorGenerator {
+public class ServiceLocatorGeneratorHolderSPI implements GuiceServiceLocatorGenerator {
   
   private static final AtomicReference<ServiceLocatorGenerator> GENERATOR_REF = new AtomicReference<>();
   
   public static ServiceLocatorGenerator install(ServiceLocator locator) {
-    return install(new GuiceServiceLocatorGenerator(locator));
+    return install(new GuiceServiceLocatorGeneratorImpl(locator));
   }
   
   public static ServiceLocatorGenerator install(ServiceLocatorGenerator generator) {
