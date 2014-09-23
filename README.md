@@ -4,11 +4,11 @@ This library provides support for Jersey 2.0 w/ Guice similar to the way it used
 
 [![Continuous Integration](https://travis-ci.org/Squarespace/jersey2-guice.svg?branch=master)](https://travis-ci.org/Squarespace/jersey2-guice)
 
-# User's Guide
+## User's Guide
 
 The [User's Guide](https://github.com/Squarespace/jersey2-guice/wiki) can be found in the Wiki.
 
-# Apache 2.0 License
+## Apache 2.0 License
 
     Copyright 2014 Squarespace, Inc.
     
