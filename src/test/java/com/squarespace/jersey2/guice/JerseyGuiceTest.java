@@ -18,6 +18,7 @@ package com.squarespace.jersey2.guice;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,6 +65,11 @@ public class JerseyGuiceTest {
   
   private static final String VALUE = "Hello, World!";
   
+  private static final Class<?>[] RESOURCES = {
+    MyResource.class, 
+    MyAsyncResource.class
+  };
+  
   private final MyInterceptor interceptor = new MyInterceptor();
   
   private final ServletModule jerseyModule = new ServletModule() {
@@ -86,7 +92,9 @@ public class JerseyGuiceTest {
   private final AbstractModule aopModule = new AbstractModule() {
     @Override
     protected void configure() {
-      bind(MyResource.class);
+      for (Class<?> resource : RESOURCES) {
+        bind(resource);
+      }
       
       bindInterceptor(Matchers.any(), 
         Matchers.annotatedWith(MyAnnotation.class), 
@@ -135,7 +143,7 @@ public class JerseyGuiceTest {
       }
     };
     
-    try (HttpServer server = HttpServerUtils.newHttpServer(listener, MyResource.class)) {
+    try (HttpServer server = HttpServerUtils.newHttpServer(listener, RESOURCES)) {
       check();
     }
     
@@ -169,7 +177,7 @@ public class JerseyGuiceTest {
       BootstrapUtils.install(locator);
     }
     
-    try (HttpServer server = HttpServerUtils.newHttpServer(MyResource.class)) {
+    try (HttpServer server = HttpServerUtils.newHttpServer(RESOURCES)) {
       check();
     }
   }
@@ -179,8 +187,19 @@ public class JerseyGuiceTest {
     
     String url = "http://localhost:" + HttpServerUtils.PORT;
     
-    String[] paths = { MyResource.PATH, MyFilter.PATH, MyHttpServlet.PATH };
-    String[] responses = { MyResource.RESPONSE, MyFilter.RESPONSE, MyHttpServlet.RESPONSE };
+    String[] paths = { 
+        MyResource.PATH, 
+        MyAsyncResource.PATH, 
+        MyFilter.PATH, 
+        MyHttpServlet.PATH 
+    };
+    
+    String[] responses = { 
+        MyResource.RESPONSE, 
+        MyAsyncResource.RESPONSE, 
+        MyFilter.RESPONSE, 
+        MyHttpServlet.RESPONSE 
+    };
     
     assertEquals(paths.length, responses.length);
     
@@ -193,6 +212,8 @@ public class JerseyGuiceTest {
           
           String value = target.request(MediaType.TEXT_PLAIN).get(String.class);
           assertEquals(value, String.format(responses[i], VALUE));
+      } catch (Exception err) {
+        fail("Path: " + paths[i], err);
       } finally {
         client.close();
       }
@@ -202,11 +223,16 @@ public class JerseyGuiceTest {
     Client client = ClientBuilder.newClient();
     try {
       for (int i = 0; i < paths.length; i++) {
-        WebTarget target = client.target(url).path(paths[i]);
-        
-        String value = target.request(MediaType.TEXT_PLAIN).get(String.class);
-        assertEquals(value, String.format(responses[i], VALUE));
+        try {
+          WebTarget target = client.target(url).path(paths[i]);
+          
+          String value = target.request(MediaType.TEXT_PLAIN).get(String.class);
+          assertEquals(value, String.format(responses[i], VALUE));
+        } catch (Exception err) {
+          fail("Path: " + paths[i], err);
+        }
       }
+      
     } finally {
       client.close();
     }
