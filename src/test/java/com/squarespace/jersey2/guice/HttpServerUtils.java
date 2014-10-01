@@ -28,11 +28,15 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.servlet.GuiceFilter;
 
 class HttpServerUtils {
 
+  private static final Logger LOG = LoggerFactory.getLogger(HttpServerUtils.class);
+  
   public static final int PORT = 8081;
   
   private HttpServerUtils() {}
@@ -45,6 +49,8 @@ class HttpServerUtils {
     ResourceConfig config = new ResourceConfig();
     
     for (Class<?> clazz : rsrc) {
+      LOG.info("Resource: {}", clazz);
+      
       config.register(clazz);
     }
     
