@@ -14,15 +14,27 @@
  * limitations under the License.
  */
 
-package com.squarespace.jersey2.guice;
+package com.squarespace.jersey2.guice.utils;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.io.Closeable;
+import java.io.IOException;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import org.eclipse.jetty.server.Server;
 
-@Target(METHOD)
-@Retention(RUNTIME)
-public @interface MyAnnotation {
+public class HttpServer implements Closeable {
+
+  private final Server server;
+
+  public HttpServer(Server server) {
+    this.server = server;
+  }
+  
+  @Override
+  public void close() throws IOException {
+    try {
+      server.stop();
+    } catch (Exception err) {
+      throw new IOException(err);
+    }
+  }
 }

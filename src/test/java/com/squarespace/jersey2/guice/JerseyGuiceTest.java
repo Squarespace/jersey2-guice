@@ -45,8 +45,6 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -55,9 +53,10 @@ import org.testng.annotations.Test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
+import com.squarespace.jersey2.guice.utils.HttpServer;
+import com.squarespace.jersey2.guice.utils.HttpServerUtils;
 
 public class JerseyGuiceTest {
 
@@ -69,8 +68,6 @@ public class JerseyGuiceTest {
     MyResource.class, 
     MyAsyncResource.class
   };
-  
-  private final MyInterceptor interceptor = new MyInterceptor();
   
   private final ServletModule jerseyModule = new ServletModule() {
     @Override
@@ -86,19 +83,6 @@ public class JerseyGuiceTest {
       bind(String.class)
         .annotatedWith(Names.named(NAME))
         .toInstance(VALUE);
-    }
-  };
-  
-  private final AbstractModule aopModule = new AbstractModule() {
-    @Override
-    protected void configure() {
-      for (Class<?> resource : RESOURCES) {
-        bind(resource);
-      }
-      
-      bindInterceptor(Matchers.any(), 
-        Matchers.annotatedWith(MyAnnotation.class), 
-        interceptor);
     }
   };
   
@@ -149,15 +133,6 @@ public class JerseyGuiceTest {
     
     // Make sure it called once and once only
     assertEquals(counter.get(), 1);
-  }
-  
-  @Test(dependsOnGroups = { "Non-SPI", "SPI" })
-  public void checkAOP() throws IOException {
-    interceptor.counter.set(0);
-    
-    embedded(false, aopModule);
-    
-    assertEquals(interceptor.counter.get(), 2);
   }
   
   private void embedded(boolean useSPI, Module... extras) throws IOException {
@@ -283,17 +258,6 @@ public class JerseyGuiceTest {
 
     @Override
     public void destroy() {
-    }
-  }
-  
-  private class MyInterceptor implements MethodInterceptor {
-
-    public final AtomicInteger counter = new AtomicInteger();
-    
-    @Override
-    public Object invoke(MethodInvocation invocation) throws Throwable {
-      counter.incrementAndGet();
-      return invocation.proceed();
     }
   }
 }
