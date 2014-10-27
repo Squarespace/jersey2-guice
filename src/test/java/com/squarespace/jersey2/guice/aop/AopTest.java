@@ -43,7 +43,7 @@ import com.squarespace.jersey2.guice.utils.HttpServerUtils;
 
 public class AopTest {
   
-  @Test
+  @Test(dependsOnGroups = { "Non-SPI", "SPI" })
   public void checkAOP() throws IOException {
     
     final MyInterceptor interceptor = new MyInterceptor();
