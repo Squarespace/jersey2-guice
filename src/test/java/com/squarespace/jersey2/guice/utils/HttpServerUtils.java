@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.squarespace.jersey2.guice;
+package com.squarespace.jersey2.guice.utils;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.servlet.GuiceFilter;
 
-class HttpServerUtils {
+public class HttpServerUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(HttpServerUtils.class);
   

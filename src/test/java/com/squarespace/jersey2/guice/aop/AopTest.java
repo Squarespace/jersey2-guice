@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.squarespace.jersey2.guice;
+package com.squarespace.jersey2.guice.aop;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,75 +30,72 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.hk2.api.ServiceLocator;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.servlet.ServletModule;
+import com.squarespace.jersey2.guice.BootstrapUtils;
 import com.squarespace.jersey2.guice.utils.HttpServer;
 import com.squarespace.jersey2.guice.utils.HttpServerUtils;
 
-public class SingletonResourceTest {
-  
-  @AfterTest
-  public void reset() {
-    BootstrapUtils.reset();
-  }
+public class AopTest {
   
   @Test
-  public void singletons() throws IOException {
+  public void checkAOP() throws IOException {
+    
+    final MyInterceptor interceptor = new MyInterceptor();
+    
+    AbstractModule aopModule = new AbstractModule() {
+      @Override
+      protected void configure() {
+        // ATTENTION: This is really important. It binds the 
+        // 'MyResource' class to Guice and makes sure that HK2's
+        // ServiceLocator will use Guice to instantiate it.
+        bind(MyResource.class); 
+        
+        bindInterceptor(Matchers.any(), 
+          Matchers.annotatedWith(MyAnnotation.class), 
+          interceptor);
+      }
+    };
+    
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
     
     List<Module> modules = new ArrayList<>();
     modules.add(new ServletModule());
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(MySingletonResource.class);
-        bind(MyGuiceSingletonResource.class);
-      }
-    });
+    modules.add(aopModule);
     
     @SuppressWarnings("unused")
     Injector injector = BootstrapUtils.newInjector(locator, modules);
     
     BootstrapUtils.install(locator);
     
-    try (HttpServer server = HttpServerUtils.newHttpServer(MySingletonResource.class, MyGuiceSingletonResource.class)) {
+    try (HttpServer server = HttpServerUtils.newHttpServer(MyResource.class)) {
       check();
     }
+    
+    assertEquals(interceptor.counter.get(), 1);
   }
   
   private void check() throws IOException {
+    assertTrue(BootstrapUtils.isInstalled(), "jersey2-guice is not installed");
     
     String url = "http://localhost:" + HttpServerUtils.PORT;
     
-    String[] paths = { MySingletonResource.PATH, MyGuiceSingletonResource.PATH };
-    
-    // Client #1: Create a new Client instance for each request
-    for (int i = 0; i < paths.length; i++) {
+    Client client = ClientBuilder.newClient();
+    try {
       
-      String expected = null;
-      
-      for (int j = 0; j < 2; j++) {
-        Client client = ClientBuilder.newClient();
-        try {
-            WebTarget target = client.target(url).path(paths[i]);
-            String value = target.request(MediaType.TEXT_PLAIN).get(String.class);
+        WebTarget target = client.target(url).path(MyResource.PATH);
         
-            if (j == 0) {
-              expected = value;
-            } else {
-              assertNotNull(expected);
-              assertEquals(value, expected, "path=" + paths[i]);
-            }
-            
-        } finally {
-          client.close();
-        }
-      }
+        String value = target.request(MediaType.TEXT_PLAIN).get(String.class);
+        assertEquals(value, MyResource.RESPONSE);
+    } catch (Exception err) {
+      fail("Exception", err);
+    } finally {
+      client.close();
     }
   }
 }
