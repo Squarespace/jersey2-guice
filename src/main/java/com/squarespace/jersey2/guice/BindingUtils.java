@@ -43,6 +43,7 @@ import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.NamedImpl;
 import org.glassfish.hk2.utilities.reflection.ParameterizedTypeImpl;
+import org.glassfish.hk2.utilities.reflection.ReflectionHelper;
 import org.glassfish.jersey.spi.Contract;
 import org.jvnet.hk2.annotations.Optional;
 import org.jvnet.hk2.internal.ConstantActiveDescriptor;
@@ -206,7 +207,6 @@ class BindingUtils {
   public static Key<?> toKey(Injectee injectee) {
     Type type = injectee.getRequiredType();
     Set<Annotation> qualifiers = getQualifiers(injectee);
-    
     return newKey(type, qualifiers);
   }
   
@@ -217,17 +217,26 @@ class BindingUtils {
    * NOTE: The {@link Set} will be either empty or will have
    * at most one {@link Annotation} in it.
    */
-  public static Set<Annotation> getQualifiers(Key<?> key, boolean rewrite) {
-    Annotation qualifier = key.getAnnotation();
-    if (qualifier != null) {
-      // Rewrite Guice's Named into javax.inject.Named. It's necessary if 
-      // the Annotation(s) are going to be passed into HK2 which doesn't
-      // know anything about Guice's flavor of Named.
-      if (rewrite && qualifier instanceof com.google.inject.name.Named) {
-        qualifier = toThreeThirtyNamed((com.google.inject.name.Named)qualifier);
+  public static <T> Set<Annotation> getQualifiers(Key<T> key) {
+    Annotation annotation = key.getAnnotation();
+    if (annotation != null) {
+      
+      // Replace 'com.google.inject.name.Named' with 'javax.inject.Named' 
+      if (annotation instanceof com.google.inject.name.Named) {
+        annotation = toThreeThirtyNamed((com.google.inject.name.Named)annotation);
       }
       
-      return Collections.singleton(qualifier);
+      Class<? extends Annotation> type = annotation.annotationType();
+      if (type.isAnnotationPresent(Qualifier.class)) {
+        return Collections.singleton(annotation);
+      }
+      
+      return Collections.<Annotation>singleton(new GuiceQualifier<>(key));
+    }
+    
+    Class<? extends Annotation> annotationType = key.getAnnotationType();
+    if (annotationType != null) {
+      return Collections.<Annotation>singleton(new GuiceQualifier<>(key));
     }
     
     return Collections.emptySet();
@@ -267,8 +276,11 @@ class BindingUtils {
       return qualifiers;
     }
     
+    AnnotatedElement element = injectee.getParent();
+    int position = injectee.getPosition();
+    
     // Guice's @BindingAnnotation is the same as @Qualifier
-    Annotation annotation = getBindingAnnotation(injectee.getParent(), injectee.getPosition());
+    Annotation annotation = getBindingAnnotation(element, position);
     if (annotation != null) {
       return Collections.singleton(annotation);
     }
@@ -312,6 +324,13 @@ class BindingUtils {
     }
     
     return null;
+  }
+  
+  /**
+   * @see ReflectionHelper#getNameFromAllQualifiers(Set, AnnotatedElement)
+   */
+  public static String getNameFromAllQualifiers(Set<Annotation> qualifiers, AnnotatedElement element) {
+    return ReflectionHelper.getNameFromAllQualifiers(qualifiers, element);
   }
 
   /**

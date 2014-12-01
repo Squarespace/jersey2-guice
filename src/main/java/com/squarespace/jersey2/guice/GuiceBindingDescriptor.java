@@ -27,7 +27,6 @@ import org.glassfish.hk2.api.DescriptorType;
 import org.glassfish.hk2.api.DescriptorVisibility;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
-import org.glassfish.hk2.utilities.reflection.ReflectionHelper;
 
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -44,7 +43,7 @@ class GuiceBindingDescriptor<T> extends AbstractActiveDescriptor<T> {
   public GuiceBindingDescriptor(Type type, Class<?> clazz, 
       Set<Annotation> qualifiers, Binding<T> binding) {
     super(Collections.singleton(type), GuiceScope.class, 
-        ReflectionHelper.getNameFromAllQualifiers(qualifiers, clazz), 
+        BindingUtils.getNameFromAllQualifiers(qualifiers, clazz), 
         qualifiers, DescriptorType.CLASS, DescriptorVisibility.NORMAL,
         0, false, (Boolean)null, (String)null,
         Collections.<String, List<String>>emptyMap());
@@ -63,5 +62,10 @@ class GuiceBindingDescriptor<T> extends AbstractActiveDescriptor<T> {
   @Override
   public T create(ServiceHandle<?> root) {
     return binding.getProvider().get();
+  }
+
+  @Override
+  public boolean isReified() {
+    return true;
   }
 }

@@ -54,7 +54,8 @@ class GuiceJustInTimeResolver implements JustInTimeInjectionResolver {
       Binding<?> binding = findBinding(injectee);
       if (binding != null) {
         Key<?> key = binding.getKey();
-        Set<Annotation> qualifiers = BindingUtils.getQualifiers(key, true);
+        //Set<Annotation> qualifiers = BindingUtils.getQualifiers2(key, true);
+        Set<Annotation> qualifiers = BindingUtils.getQualifiers(key);
         
         GuiceBindingDescriptor<?> descriptor = new GuiceBindingDescriptor<>(
             type, clazz, qualifiers, binding);

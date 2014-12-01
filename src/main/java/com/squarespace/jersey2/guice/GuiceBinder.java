@@ -46,7 +46,7 @@ class GuiceBinder<T> extends AbstractBinder {
 
   @Override
   protected void configure() {
-    bind(descriptor(key, binding));
+    bind(newDescriptor(key, binding));
   }
   
   @Override
@@ -71,14 +71,14 @@ class GuiceBinder<T> extends AbstractBinder {
     return key.toString();
   }
   
-  private static <T> GuiceBindingDescriptor<T> descriptor(Key<T> key, Binding<T> binding) {
+  private static <T> GuiceBindingDescriptor<T> newDescriptor(Key<T> key, Binding<T> binding) {
     
     TypeLiteral<T> typeLiteral = key.getTypeLiteral();
     
     Type type = typeLiteral.getType();
     Class<?> clazz = typeLiteral.getRawType();
     
-    Set<Annotation> qualifiers = BindingUtils.getQualifiers(key, false);
+    Set<Annotation> qualifiers = BindingUtils.getQualifiers(key);
     
     return new GuiceBindingDescriptor<>(type, clazz, qualifiers, binding);
   }
