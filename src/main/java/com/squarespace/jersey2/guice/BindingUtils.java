@@ -51,6 +51,7 @@ import com.google.inject.BindingAnnotation;
 import com.google.inject.Guice;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.internal.Annotations;
 import com.google.inject.internal.Nullability;
 
 class BindingUtils {
@@ -229,7 +230,12 @@ class BindingUtils {
       
       return Collections.singleton(qualifier);
     }
-    
+    if(key.getAnnotationType()!=null) {
+        // @rkapsi : Annotations.generateAnnotation throws an exception if the annotation has no default methods.
+        // Maybe the guice helper method is too restrictive
+        final Annotation generateAnnotation = Annotations.generateAnnotation(key.getAnnotationType());
+        return Collections.singleton(generateAnnotation);
+    }
     return Collections.emptySet();
   }
   
