@@ -56,6 +56,8 @@ public class ResourceWithNamedInjectionTest {
         modules.add(new AbstractModule() {
             @Override
             protected void configure() {
+                bind(HelloResource.class);
+              
                 bind(HelloService.class).to(HelloServiceBase.class);
                 bind(HelloService.class).annotatedWith(Names.named("simple")).to(HelloServiceSimple.class);
                 bind(HelloService.class).annotatedWith(Other.class).to(HelloServiceOther.class);
