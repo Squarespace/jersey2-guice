@@ -10,10 +10,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import com.google.inject.BindingAnnotation;
+import com.google.inject.internal.Annotations;
 
 @BindingAnnotation
 @Retention(RUNTIME)
+@javax.inject.Qualifier
 @Target({ TYPE, METHOD, FIELD, PARAMETER })
 public @interface Other {
 
+    /**
+     * Workaround to pass Guice check {@link Annotations#isAllDefaultMethods(annotationType)}
+     */
+    boolean unused() default true;
 }

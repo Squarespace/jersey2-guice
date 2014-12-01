@@ -108,7 +108,7 @@ public class ResourceWithNamedInjectionTest {
     @Test
     public void annotatedTest() throws IOException {
         WebTarget target = getWebTarget();
-        String value = target.path("annotaded").request(MediaType.TEXT_PLAIN).get(String.class);
+        String value = target.path("annotated").request(MediaType.TEXT_PLAIN).get(String.class);
         assertNotNull(value);
         assertEquals(value, HelloServiceOther.HELLO);
     }

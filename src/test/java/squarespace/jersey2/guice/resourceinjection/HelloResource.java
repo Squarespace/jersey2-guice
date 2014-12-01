@@ -17,7 +17,7 @@ public final class HelloResource {
 
     @Inject
     @Other
-    HelloService annotadedService;
+    HelloService annotatedService;
 
     @GET
     public String hello() {
@@ -31,8 +31,8 @@ public final class HelloResource {
     }
 
     @GET
-    @Path("annotaded")
-    public String helloAnnotaded() {
-        return annotadedService.hello();
+    @Path("annotated")
+    public String helloAnnotated() {
+        return annotatedService.hello();
     }
 }
