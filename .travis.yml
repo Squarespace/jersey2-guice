@@ -7,3 +7,5 @@ jdk:
 branches:
   only:
     - master
+
+script: "./gradlew test --continue"
