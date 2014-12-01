@@ -1,4 +1,4 @@
-package squarespace.jersey2.guice.resourceinjection;
+package com.squarespace.jersey2.guice.resource;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
