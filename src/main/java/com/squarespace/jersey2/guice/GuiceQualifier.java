@@ -16,6 +16,7 @@ import com.google.inject.Key;
  * @see Qualifier
  * @see Key
  */
+@SuppressWarnings("all")
 class GuiceQualifier<T> implements Qualifier, Serializable {
   
   private static final long serialVersionUID = 0;
