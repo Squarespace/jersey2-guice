@@ -205,6 +205,8 @@ public class BootstrapUtils {
       copy.add(module);
     }
     
+    // It seems people are forgetting to install the ServletModule.
+    copy.add(new ServletModule());
     copy.add(new BootstrapModule(locator));
     
     Injector injector = createInjector(stage, copy);

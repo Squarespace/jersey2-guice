@@ -35,7 +35,6 @@ import org.testng.annotations.Test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.servlet.ServletModule;
 import com.squarespace.jersey2.guice.utils.HttpServer;
 import com.squarespace.jersey2.guice.utils.HttpServerUtils;
 
@@ -51,7 +50,6 @@ public class SingletonResourceTest {
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
     
     List<Module> modules = new ArrayList<>();
-    modules.add(new ServletModule());
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
