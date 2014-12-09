@@ -42,7 +42,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
-import com.google.inject.servlet.ServletModule;
 import com.squarespace.jersey2.guice.BootstrapUtils;
 import com.squarespace.jersey2.guice.utils.HttpServer;
 import com.squarespace.jersey2.guice.utils.HttpServerUtils;
@@ -55,7 +54,6 @@ public class ResourceWithNamedInjectionTest {
   public void setUp() throws IOException {
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
     List<Module> modules = new ArrayList<>();
-    modules.add(new ServletModule());
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
