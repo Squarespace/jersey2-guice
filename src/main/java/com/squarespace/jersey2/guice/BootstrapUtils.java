@@ -22,6 +22,7 @@ import static com.squarespace.jersey2.guice.BindingUtils.newThreeThirtyInjection
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 import javax.ws.rs.ext.RuntimeDelegate;
+
+import jersey.repackaged.com.google.common.collect.ImmutableMap;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -239,10 +242,29 @@ public class BootstrapUtils {
    */
   public static void link(ServiceLocator locator, Injector injector) {
     
-    Map<Key<?>, Binding<?>> bindings = injector.getBindings();
+    Map<Key<?>, Binding<?>> bindings = gatherGuiceBindings(injector);
     Set<Binder> binders = toBinders(bindings);
     
     link(locator, injector, binders);
+  }
+  
+  /**
+   * Gathers Guice {@link Injector} bindings over the hierarchy.
+   * 
+   * @param injector Guice injector to start with
+   * @return
+   */
+  private static Map<Key<?>, Binding<?>> gatherGuiceBindings(final Injector injector) {
+      
+    Map<Key<?>, Binding<?>> result = new HashMap<Key<?>, Binding<?>>();
+    
+    Injector curInjector = injector;
+    while(curInjector != null)
+    {
+        result.putAll(curInjector.getBindings());
+        curInjector = curInjector.getParent();
+    }
+    return ImmutableMap.copyOf(result);
   }
   
   /**
