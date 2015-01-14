@@ -32,8 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Singleton;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import jersey.repackaged.com.google.common.collect.ImmutableMap;
-
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
@@ -242,7 +240,7 @@ public class BootstrapUtils {
    */
   public static void link(ServiceLocator locator, Injector injector) {
     
-    Map<Key<?>, Binding<?>> bindings = gatherGuiceBindings(injector);
+    Map<Key<?>, Binding<?>> bindings = gatherBindings(injector);
     Set<Binder> binders = toBinders(bindings);
     
     link(locator, injector, binders);
@@ -250,21 +248,18 @@ public class BootstrapUtils {
   
   /**
    * Gathers Guice {@link Injector} bindings over the hierarchy.
-   * 
-   * @param injector Guice injector to start with
-   * @return
    */
-  private static Map<Key<?>, Binding<?>> gatherGuiceBindings(final Injector injector) {
+  private static Map<Key<?>, Binding<?>> gatherBindings(Injector injector) {
       
-    Map<Key<?>, Binding<?>> result = new HashMap<Key<?>, Binding<?>>();
+    Map<Key<?>, Binding<?>> dst = new HashMap<Key<?>, Binding<?>>();
     
-    Injector curInjector = injector;
-    while(curInjector != null)
-    {
-        result.putAll(curInjector.getBindings());
-        curInjector = curInjector.getParent();
+    Injector current = injector;
+    while (current != null) {
+      dst.putAll(current.getBindings());
+      current = current.getParent();
     }
-    return ImmutableMap.copyOf(result);
+    
+    return dst;
   }
   
   /**
