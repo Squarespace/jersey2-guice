@@ -77,7 +77,7 @@ class GuiceBindingDescriptor<T> extends AbstractActiveDescriptor<T> {
     return qualifierAnnotations.isEmpty() ? qualifierAnnotations : lenientSet(qualifierAnnotations);
   }
 
-  public static <E> Set<E> lenientSet(Collection<E> entries){
+  private static <E> Set<E> lenientSet(Collection<E> entries){
     LenientHashSet<E> lenientHashSet = new LenientHashSet<>();
     lenientHashSet.addAll(entries);
     return lenientHashSet;
@@ -89,19 +89,21 @@ class GuiceBindingDescriptor<T> extends AbstractActiveDescriptor<T> {
    * Ugly workaround until hk2 supports something similar to guice's AnnotationTypeStrategy.
    */
   @SuppressWarnings("serial")
-  private static final class LenientHashSet<E> extends HashSet<E>{
+  private static class LenientHashSet<E> extends HashSet<E>{
     @Override
-    public boolean containsAll(Collection<?> foreignEntries){
-      for(Object foreignEntry : foreignEntries){
+    public boolean containsAll(Collection<?> foreignEntries) {
+      for (Object foreignEntry : foreignEntries) {
         boolean matched = false;
-        for(E containedEntry : this){
-          if(containedEntry.equals(foreignEntry)){
+        for (E containedEntry : this){
+          if (containedEntry.equals(foreignEntry)) {
             matched = true;
             break;
           }
         }
-        if(!matched)
+        
+        if(!matched) {
           return false;
+        }
       }
       return true;
     }

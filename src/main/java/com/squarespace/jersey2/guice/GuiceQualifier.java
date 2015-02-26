@@ -46,12 +46,16 @@ class GuiceQualifier<T> implements Qualifier, Serializable {
 
   @Override
   public boolean equals(Object o){
-    if(o == this)
+    if (o == this) {
       return true;
-    else if(annotationType().isInstance(o))
+      
+    } else if (annotationType().isInstance(o)) {
       return true;
-    else if(!(o instanceof GuiceQualifier<?>))
+      
+    } else if (!(o instanceof GuiceQualifier<?>)) {
       return false;
+    }
+    
     GuiceQualifier<?> other = (GuiceQualifier<?>) o;
     return annotationType().equals(other.annotationType());
   }

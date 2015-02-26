@@ -82,11 +82,11 @@ public class JerseyGuiceTest {
     @Override
     protected void configure() {
       bind(String.class)
-      .annotatedWith(Names.named(NAME))
-      .toInstance(VALUE);
+        .annotatedWith(Names.named(NAME))
+        .toInstance(VALUE);
       bind(String.class)
-      .annotatedWith(MyQualifier.class)
-      .toInstance(MyQualifierResource.RESPONSE);
+        .annotatedWith(MyQualifier.class)
+        .toInstance(MyQualifierResource.RESPONSE);
     }
   };
 
