@@ -61,14 +61,15 @@ import com.squarespace.jersey2.guice.utils.HttpServerUtils;
 public class JerseyGuiceTest {
 
   public static final String NAME = "JerseyGuiceTest.NAME";
-  
+
   private static final String VALUE = "Hello, World!";
-  
+
   private static final Class<?>[] RESOURCES = {
-    MyResource.class, 
-    MyAsyncResource.class
+    MyResource.class,
+    MyAsyncResource.class,
+    MyQualifierResource.class
   };
-  
+
   private final ServletModule jerseyModule = new ServletModule() {
     @Override
     protected void configureServlets() {
@@ -76,40 +77,43 @@ public class JerseyGuiceTest {
       filter(MyFilter.PATH).through(MyFilter.class);
     }
   };
-  
+
   private final AbstractModule customModule = new AbstractModule() {
     @Override
     protected void configure() {
       bind(String.class)
-        .annotatedWith(Names.named(NAME))
-        .toInstance(VALUE);
+      .annotatedWith(Names.named(NAME))
+      .toInstance(VALUE);
+      bind(String.class)
+      .annotatedWith(MyQualifier.class)
+      .toInstance(MyQualifierResource.RESPONSE);
     }
   };
-  
+
   // This *MUST* run first. Testing SPIs is not fun!
   @Test(groups = "SPI")
   public void useSPI() throws IOException {
     if (!InjectionsUtils.hasFix()) {
       Assert.fail("This test needs Jersey 2.11+");
     }
-    
+
     embedded(true);
   }
-  
+
   @AfterTest
   public void reset() {
     BootstrapUtils.reset();
   }
-  
+
   @Test(groups = "Non-SPI", dependsOnGroups = "SPI")
   public void useReflection() throws IOException {
     embedded(false);
   }
-  
+
   @Test(groups = "Non-SPI", dependsOnGroups = "SPI")
   public void useServletContextListener() throws IOException {
     final AtomicInteger counter = new AtomicInteger();
-    
+
     ServletContextListener listener = new ServletContextListener() {
       @Override
       public void contextInitialized(ServletContextEvent sce) {
@@ -121,129 +125,131 @@ public class JerseyGuiceTest {
           }
         }).contextInitialized(sce);
       }
-      
+
       @Override
       public void contextDestroyed(ServletContextEvent sce) {
       }
     };
-    
+
     try (HttpServer server = HttpServerUtils.newHttpServer(listener, RESOURCES)) {
       check();
     }
-    
+
     // Make sure it called once and once only
     assertEquals(counter.get(), 1);
   }
-  
+
   private void embedded(boolean useSPI, Module... extras) throws IOException {
-    
+
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
-    
+
     List<Module> modules = new ArrayList<>();
     modules.addAll(Arrays.asList(jerseyModule, customModule));
     modules.addAll(Arrays.asList(extras));
-    
+
     @SuppressWarnings("unused")
     Injector injector = BootstrapUtils.newInjector(locator, modules);
-    
+
     if (useSPI) {
       ServiceLocatorGeneratorHolderSPI.install(locator);
     } else {
       BootstrapUtils.install(locator);
     }
-    
+
     try (HttpServer server = HttpServerUtils.newHttpServer(RESOURCES)) {
       check();
     }
   }
-  
+
   private void check() throws IOException {
     assertTrue(BootstrapUtils.isInstalled(), "jersey2-guice is not installed");
-    
+
     String url = "http://localhost:" + HttpServerUtils.PORT;
-    
-    String[] paths = { 
-        MyResource.PATH, 
-        MyAsyncResource.PATH, 
-        MyFilter.PATH, 
-        MyHttpServlet.PATH 
+
+    String[] paths = {
+        MyResource.PATH,
+        MyAsyncResource.PATH,
+        MyFilter.PATH,
+        MyHttpServlet.PATH,
+        MyQualifierResource.PATH
     };
-    
-    String[] responses = { 
-        MyResource.RESPONSE, 
-        MyAsyncResource.RESPONSE, 
-        MyFilter.RESPONSE, 
-        MyHttpServlet.RESPONSE 
+
+    String[] responses = {
+        MyResource.RESPONSE,
+        MyAsyncResource.RESPONSE,
+        MyFilter.RESPONSE,
+        MyHttpServlet.RESPONSE,
+        MyQualifierResource.RESPONSE
     };
-    
+
     assertEquals(paths.length, responses.length);
-    
+
     // Client #1: Create a new Client instance for each request
     for (int i = 0; i < paths.length; i++) {
       Client client = ClientBuilder.newClient();
       try {
-        
-          WebTarget target = client.target(url).path(paths[i]);
-          
-          String value = target.request(MediaType.TEXT_PLAIN).get(String.class);
-          assertEquals(value, String.format(responses[i], VALUE));
+
+        WebTarget target = client.target(url).path(paths[i]);
+
+        String value = target.request(MediaType.TEXT_PLAIN).get(String.class);
+        assertEquals(value, String.format(responses[i], VALUE));
       } catch (Exception err) {
         fail("Path: " + paths[i], err);
       } finally {
         client.close();
       }
     }
-    
+
     // Client #2: Re-Use the same Client instance for each request
     Client client = ClientBuilder.newClient();
     try {
       for (int i = 0; i < paths.length; i++) {
         try {
           WebTarget target = client.target(url).path(paths[i]);
-          
+
           String value = target.request(MediaType.TEXT_PLAIN).get(String.class);
           assertEquals(value, String.format(responses[i], VALUE));
         } catch (Exception err) {
           fail("Path: " + paths[i], err);
         }
       }
-      
+
     } finally {
       client.close();
     }
   }
-  
+
   @Singleton
   static class MyHttpServlet extends HttpServlet {
 
     static final String PATH = "/servlet";
-    
+
     public static final String RESPONSE = "MyHttpServlet.RESPONSE: %s";
-    
+
     @Inject
     @Named(NAME)
     private String value;
-    
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
-      
+
       resp.setContentType(MediaType.TEXT_PLAIN);
       resp.getWriter().write(String.format(RESPONSE, value));
     }
   }
-  
+
   @Singleton
   static class MyFilter implements Filter {
 
     static final String PATH = "/filter";
-    
+
     public static final String RESPONSE = "MyFilter.RESPONSE: %s";
-    
+
     @Inject
     @Named(NAME)
     private String value;
-    
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
     }
@@ -251,7 +257,7 @@ public class JerseyGuiceTest {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
-      
+
       response.setContentType(MediaType.TEXT_PLAIN);
       response.getWriter().write(String.format(RESPONSE, value));
     }
