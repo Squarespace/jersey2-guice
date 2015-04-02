@@ -32,6 +32,10 @@ allprojects {
   repositories {
     mavenCentral()
     mavenLocal()
+    
+    maven {
+      url 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
   }
   
   configurations {
@@ -84,14 +88,14 @@ allprojects {
 }
 
 project.ext {
-  guice = System.getProperty('guice', '4.0-beta5')
-  jersey = System.getProperty('jersey', '2.15')
+  guice = System.getProperty('guice', '4.0-SNAPSHOT')
+  jersey = System.getProperty('jersey', '2.17')
   
   isReleaseVersion = !version.endsWith('-SNAPSHOT')
 }
 
 dependencies {
-  compile 'org.slf4j:slf4j-api:1.7.7'
+  compile 'org.slf4j:slf4j-api:1.7.12'
   
   compile 'com.google.code.findbugs:jsr305:3.0.0'
   compile "com.google.inject.extensions:guice-servlet:${project.guice}"
@@ -106,8 +110,8 @@ dependencies {
   
   provided 'javax.servlet:javax.servlet-api:3.1.0'
   
-  testCompile 'org.eclipse.jetty:jetty-servlet:9.2.0.v20140526'
-  testCompile 'org.testng:testng:6.8.8'
+  testCompile 'org.eclipse.jetty:jetty-servlet:9.2.9.v20150224'
+  testCompile 'org.testng:testng:6.8.21'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
