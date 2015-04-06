@@ -89,7 +89,7 @@ allprojects {
 
 project.ext {
   guice = System.getProperty('guice', '4.0-SNAPSHOT')
-  jersey = System.getProperty('jersey', '2.17')
+  jersey = System.getProperty('jersey', '2.16')
   
   isReleaseVersion = !version.endsWith('-SNAPSHOT')
 }
@@ -106,7 +106,10 @@ dependencies {
     exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
   }
   
-  testCompile "org.glassfish.jersey.containers:jersey-container-servlet:${project.jersey}"
+  testCompile ("org.glassfish.jersey.containers:jersey-container-servlet:${project.jersey}") {
+    // Use Guice's javax.inject module
+    exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
+  }
   
   provided 'javax.servlet:javax.servlet-api:3.1.0'
   
