@@ -1,18 +1,10 @@
-buildscript {
-  repositories {
-    mavenCentral()
-    maven { url 'https://oss.sonatype.org/content/groups/public' }
-  }
-  dependencies {
-    classpath 'com.github.townsfolk:gradle-release:1.2'
-  }
+plugins {
+  id 'net.researchgate.release' version '2.0.2'
 }
 
 task wrapper(type: Wrapper) {
   gradleVersion = '2.3'
 }
-
-apply plugin: 'release'
 
 allprojects {
   apply plugin: 'java'
