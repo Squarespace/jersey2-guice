@@ -190,7 +190,7 @@ class BindingUtils {
    */
   public static boolean isContract(Injectee injectee) {
     Type type = injectee.getRequiredType();
-    return ((Class<?>)type).isAnnotationPresent(Contract.class);
+    return type instanceof Class && ((Class<?>)type).isAnnotationPresent(Contract.class);
   }
   
   /**
