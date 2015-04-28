@@ -80,7 +80,7 @@ allprojects {
 }
 
 project.ext {
-  guice = System.getProperty('guice', '4.0-SNAPSHOT')
+  guice = System.getProperty('guice', '4.0-beta5')
   jersey = System.getProperty('jersey', '2.16')
   
   isReleaseVersion = !version.endsWith('-SNAPSHOT')
