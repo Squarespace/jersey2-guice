@@ -346,7 +346,17 @@ public class BootstrapUtils {
       
       // Skip everything that is declared in a JerseyModule
       try {
-        Class<?> module = Class.forName(name);
+
+        Class<?> module;
+
+        // Attempt to load the classes via the context class loader first, in order to support
+        // environments that enforce tighter constraints on class loading (such as in an OSGi container)
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        if(classLoader != null) {
+          module = classLoader.loadClass(name);
+        } else {
+          module = Class.forName(name);
+        }
         if (JerseyModule.class.isAssignableFrom(module)) {
           if (LOG.isTraceEnabled()) {
             LOG.trace("Ignoring binding {} in {}", key, module);
@@ -355,7 +365,13 @@ public class BootstrapUtils {
           continue;
         }
       } catch (ClassNotFoundException err) {
-        throw new IllegalStateException("name=" + name, err);
+        // Some modules may not be able to be instantiated directly here as a class if we're running
+        // in a container that enforcer tighter class loader constraints (such as the
+        // org.ops4j.peaberry.osgi.OSGiModule Guice module when running in an OSGi container),
+        // so we're only logging a warning here instead of throwing a hard exception
+        if (LOG.isWarnEnabled()) {
+          LOG.warn("Unavailable to load class in order to validate module: name=" + name);
+        }
       }
       
       binders.add(new GuiceBinder(key, binding));
