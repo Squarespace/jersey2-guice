@@ -1,9 +1,9 @@
 plugins {
-  id 'net.researchgate.release' version '2.0.2'
+  id 'net.researchgate.release' version '2.3.4'
 }
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '2.3'
+  gradleVersion = '2.11'
 }
 
 allprojects {
@@ -16,8 +16,8 @@ allprojects {
   // UTF-8 should be standard by now. So use it!
   [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
   
-  sourceCompatibility = 1.7
-  targetCompatibility = 1.7
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
   
   group = 'com.squarespace.jersey2-guice'
   
@@ -33,25 +33,34 @@ allprojects {
   configurations {
     provided
   }
-  
+}
+
+subprojects {
+
+  project.ext {
+    guiceVersion = '4.0'
+    jerseyVersion = '2.22.2'
+    hk2Version = '2.4.0-b34'
+  }
+
   // Telling Eclipse about the provided scope
   eclipse.classpath.plusConfigurations += [configurations.provided]
 
+  // Telling IDEA about the provided scope
+  idea {
+    module {
+      scopes.PROVIDED.plus += [configurations.provided]
+    }
+  }
+    
   sourceSets {
-    main { 
-      compileClasspath += [configurations.provided]
+    main {
+      compileClasspath += configurations.provided
     }
     
-    test { 
-      compileClasspath += [configurations.provided]
-      runtimeClasspath += [configurations.provided]
-    }
-    
-    // Telling IDEA about the provided scope
-    idea {
-      module {
-        scopes.PROVIDED.plus += [configurations.provided]
-      }
+    test {
+      compileClasspath += configurations.provided
+      runtimeClasspath += configurations.provided
     }
   }
   
@@ -79,34 +88,9 @@ allprojects {
   }
 }
 
-project.ext {
-  guice = System.getProperty('guice', '4.0')
-  jersey = System.getProperty('jersey', '2.17')
-  
-  isReleaseVersion = !version.endsWith('-SNAPSHOT')
-}
-
 dependencies {
-  compile 'org.slf4j:slf4j-api:1.7.12'
-  
-  compile 'com.google.code.findbugs:jsr305:3.0.0'
-  compile "com.google.inject.extensions:guice-servlet:${project.guice}"
-  compile "com.google.inject.extensions:guice-multibindings:${project.guice}"
-  
-  compile ("org.glassfish.jersey.containers:jersey-container-servlet-core:${project.jersey}") {
-    // Use Guice's javax.inject module
-    exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
-  }
-  
-  testCompile ("org.glassfish.jersey.containers:jersey-container-servlet:${project.jersey}") {
-    // Use Guice's javax.inject module
-    exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
-  }
-  
-  provided 'javax.servlet:javax.servlet-api:3.1.0'
-  
-  testCompile 'org.eclipse.jetty:jetty-servlet:9.2.9.v20150224'
-  testCompile 'org.testng:testng:6.8.21'
+  compile project(':jersey2-guice-spi')
+  compile project(':jersey2-guice-impl')
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -130,11 +114,11 @@ javadoc {
   options.links('http://docs.oracle.com/javase/7/docs/api/', 
     'http://docs.oracle.com/javaee/7/api/',
     'http://google-guice.googlecode.com/git/javadoc/',
-    'https://hk2.java.net/2.3.0-b10/apidocs/')
+    'https://hk2.java.net/2.4.0-b32/apidocs/')
 }
 
 signing {
-  required { isReleaseVersion && gradle.taskGraph.hasTask('uploadArchives') }
+  required { gradle.taskGraph.hasTask('uploadArchives') }
   sign configurations.archives
 }
 
