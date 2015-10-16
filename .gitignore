@@ -8,6 +8,6 @@
 .gradle
 gradlew.bat
 
-/build
-/bin
-/test-output
+build
+bin
+test-output

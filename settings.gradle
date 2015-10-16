@@ -1,1 +1,4 @@
 rootProject.name='jersey2-guice'
+
+include 'jersey2-guice-spi'
+include 'jersey2-guice-impl'
