@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
@@ -40,13 +41,11 @@ import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
-import com.squarespace.jersey2.guice.BootstrapModule;
-import com.squarespace.jersey2.guice.BootstrapUtils;
-import com.squarespace.jersey2.guice.GuiceServiceLocatorGenerator;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
+import com.squarespace.jersey2.guice.JerseyGuiceModule;
 import com.squarespace.jersey2.guice.utils.HttpServer;
 import com.squarespace.jersey2.guice.utils.HttpServerUtils;
 
@@ -57,12 +56,16 @@ public class ResourceWithNamedInjectionTest {
   @BeforeClass
   public void setUp() throws IOException {
     
-    BootstrapUtils.install(new GuiceServiceLocatorGenerator() {
+    JerseyGuiceUtils.install(new ServiceLocatorGenerator() {
       @Override
-      protected Injector createInjector(ServiceLocator locator) {
+      public ServiceLocator create(String name, ServiceLocator parent) {
+        if (!name.startsWith("__HK2_")) {
+          return null;
+        }
+        
         List<Module> modules = new ArrayList<>();
         
-        modules.add(new BootstrapModule(locator));
+        modules.add(new JerseyGuiceModule(name));
         modules.add(new ServletModule());
         
         modules.add(new AbstractModule() {
@@ -76,7 +79,8 @@ public class ResourceWithNamedInjectionTest {
           }
         });
         
-        return Guice.createInjector(modules);
+        return Guice.createInjector(modules)
+            .getInstance(ServiceLocator.class);
       }
     });
 
@@ -86,7 +90,7 @@ public class ResourceWithNamedInjectionTest {
   @AfterClass
   public void tearDown() throws IOException {
     SERVER.close();
-    BootstrapUtils.reset();
+    JerseyGuiceUtils.reset();
   }
 
   private Client client;

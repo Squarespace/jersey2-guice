@@ -19,6 +19,8 @@ package com.squarespace.jersey2.guice;
 import static com.squarespace.jersey2.guice.BindingUtils.newGuiceInjectionResolverDescriptor;
 import static com.squarespace.jersey2.guice.BindingUtils.newThreeThirtyInjectionResolverDescriptor;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
@@ -36,6 +38,7 @@ import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.BuilderHelper;
@@ -63,56 +66,108 @@ import com.google.inject.spi.ElementSource;
  * @see ServiceLocator
  * @see Injector
  */
-public class BootstrapUtils {
+public class JerseyGuiceUtils {
   
-  private static final Logger LOG = LoggerFactory.getLogger(BootstrapUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JerseyGuiceUtils.class);
+  
+  private static final String MODIFIERS_FIELD = "modifiers";
   
   private static final String PREFIX = "GuiceServiceLocator-";
   
   private static final AtomicInteger NTH = new AtomicInteger();
   
-  private static boolean CHECKED = false;
+  private static boolean SPI_CHECKED = false;
   
-  private static boolean INSTALLED = false;
+  private static boolean SPI_PRESENT = false;
   
-  private BootstrapUtils() {}
+  private JerseyGuiceUtils() {}
   
   /**
-   * Returns {@code true} if jersey2-guice is available.
+   * Installs the given {@link Injector}.
+   * 
+   * @see JerseyGuiceModule
    */
-  public static synchronized boolean isAvailable() {
+  public static void install(Injector injector) {
+    // This binding is provided by JerseyGuiceModule
+    ServiceLocator locator = injector.getInstance(ServiceLocator.class);
     
-    if (!CHECKED) {
-      CHECKED = true;
+    GuiceServiceLocatorGenerator generator = getOrCreateGuiceServiceLocatorGenerator();
+    generator.add(locator);
+  }
+  
+  /**
+   * Installs a {@link ServiceLocatorGenerator} instead of an {@link Injector}. This 
+   * is mostly needed for testing and bootstrapping.
+   * 
+   * @see #install(Injector)
+   */
+  public static void install(ServiceLocatorGenerator delegate) {
+    GuiceServiceLocatorGenerator generator = getOrCreateGuiceServiceLocatorGenerator();
+    generator.delegate(delegate);
+  }
+  
+  /**
+   * 
+   */
+  public static void reset() {
+    GuiceServiceLocatorGenerator generator = getOrCreateGuiceServiceLocatorGenerator();
+    generator.reset();
+  }
+  
+  private static synchronized GuiceServiceLocatorGenerator getOrCreateGuiceServiceLocatorGenerator() {
+    // Use SPI
+    if (isProviderPresent()) {
+      GuiceServiceLocatorGenerator generator = (GuiceServiceLocatorGenerator)GuiceServiceLocatorGeneratorStub.get();
+      if (generator == null) {
+        generator = new GuiceServiceLocatorGenerator();
+        GuiceServiceLocatorGeneratorStub.install(generator);
+      }
+      return generator;
+    }
+    
+    // Use Reflection
+    GuiceServiceLocatorFactory factory = getOrCreateFactory();
+    if (factory != null) {
+      GuiceServiceLocatorGenerator generator = (GuiceServiceLocatorGenerator)factory.get();
+      if (generator == null) {
+        generator = new GuiceServiceLocatorGenerator();
+        factory.install(generator);
+      }
       
-      ServiceLocatorGenerator generator = generatorSPI();
+      return generator;
+    }
+    
+    throw new IllegalStateException();
+  }
+  
+  /**
+   * Returns {@code true} if jersey2-guice SPI is present.
+   */
+  private static synchronized boolean isProviderPresent() {
+    
+    if (!SPI_CHECKED) {
+      SPI_CHECKED = true;
+      
+      ServiceLocatorGenerator generator = lookupSPI();
       if (generator instanceof GuiceServiceLocatorGeneratorStub) {
-        INSTALLED = true;
+        SPI_PRESENT = true;
         
-      } else {
-        
-        if (!LOG.isErrorEnabled()) {
-          LOG.error("It appears jersey2-guice-spi is either not present or in conflict with some other Jar: {}", generator);
-        }
+      }
+      
+      if (!SPI_PRESENT) {
+        LOG.warn("It appears jersey2-guice-spi is either not present or in conflict with some other Jar: {}", generator);
       }
     }
     
-    return INSTALLED;
+    return SPI_PRESENT;
   }
   
-  /**
-   * Returns {@code true} if a {@link ServiceLocatorGenerator} is installed.
-   */
-  public static boolean isInstalled() {
-    return isAvailable() && get() != null;
-  }
-  
-  private static ServiceLocatorGenerator generatorSPI() {
+  private static ServiceLocatorGenerator lookupSPI() {
     return AccessController.doPrivileged(new PrivilegedAction<ServiceLocatorGenerator>() {
       @Override
       public ServiceLocatorGenerator run() {
         try {
-          ClassLoader classLoader = BootstrapUtils.class.getClassLoader();
+          ClassLoader classLoader = JerseyGuiceUtils.class.getClassLoader();
           ServiceLoader<ServiceLocatorGenerator> providers 
               = ServiceLoader.load(ServiceLocatorGenerator.class, classLoader);
           
@@ -129,36 +184,30 @@ public class BootstrapUtils {
   }
   
   /**
-   * Installs the given {@link ServiceLocatorGenerator} and returns the previous one.
+   * @see ServiceLocatorFactory
    */
-  public static ServiceLocatorGenerator install(ServiceLocatorGenerator generator) {
-    
-    if (!isAvailable()) {
-      throw new IllegalStateException("jersey2-guice in unavailable");
+  private static synchronized GuiceServiceLocatorFactory getOrCreateFactory() {
+    ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
+    if (factory instanceof GuiceServiceLocatorFactory) {
+      return (GuiceServiceLocatorFactory)factory;
     }
     
-    if (generator instanceof GuiceServiceLocatorGeneratorStub) {
-      throw new IllegalArgumentException();
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Attempting to install (using relfection) a Guice-aware ServiceLocatorFactory...");
     }
     
-    return GuiceServiceLocatorGeneratorStub.install(generator);
-  }
-  
-  /**
-   * Returns the currently installed {@link ServiceLocatorGenerator}.
-   */
-  public static ServiceLocatorGenerator get() {
-    
-    if (!isAvailable()) {
-      throw new IllegalStateException("jersey2-guice in unavailable");
-    }
-    
-    return GuiceServiceLocatorGeneratorStub.get();
-  }
-  
-  public static ServiceLocatorGenerator reset() {
-    if (isAvailable()) {
-      return install(null);
+    try {
+      GuiceServiceLocatorFactory guiceServiceLocatorFactory 
+          = new GuiceServiceLocatorFactory(factory);
+      
+      Class<?> clazz = ServiceLocatorFactory.class;
+      Field field = clazz.getDeclaredField("INSTANCE");
+      
+      set(field, null, guiceServiceLocatorFactory);
+      
+      return guiceServiceLocatorFactory;
+    } catch (Exception err) {err.printStackTrace();
+      LOG.error("Exception", err);
     }
     
     return null;
@@ -349,5 +398,27 @@ public class BootstrapUtils {
     }
     
     return binders;
+  }
+  
+  private static void set(Field field, Object instance, Object value) throws  IllegalAccessException, NoSuchFieldException, SecurityException {
+    field.setAccessible(true);
+    
+    int modifiers = field.getModifiers();
+    if (Modifier.isFinal(modifiers)) {
+      setModifiers(field, modifiers & ~Modifier.FINAL);
+      try {
+        field.set(instance, value);
+      } finally {
+        setModifiers(field, modifiers | Modifier.FINAL);
+      }
+    } else {
+      field.set(instance, value);
+    }
+  }
+  
+  private static void setModifiers(Field dst, int modifiers) throws IllegalAccessException, NoSuchFieldException, SecurityException {
+    Field field = Field.class.getDeclaredField(MODIFIERS_FIELD);
+    field.setAccessible(true);
+    field.setInt(dst, modifiers);
   }
 }

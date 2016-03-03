@@ -29,12 +29,12 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
 import com.squarespace.jersey2.guice.utils.HttpServer;
@@ -44,17 +44,21 @@ public class SingletonResourceTest {
   
   @AfterTest
   public void reset() {
-    BootstrapUtils.reset();
+    JerseyGuiceUtils.reset();
   }
   
   @Test
   public void singletons() throws IOException {
-    BootstrapUtils.install(new GuiceServiceLocatorGenerator() {
+    JerseyGuiceUtils.install(new ServiceLocatorGenerator() {
       @Override
-      protected Injector createInjector(ServiceLocator locator) {
+      public ServiceLocator create(String name, ServiceLocator parent) {
+        if (!name.startsWith("__HK2_")) {
+          return null;
+        }
+        
         List<Module> modules = new ArrayList<>();
         
-        modules.add(new BootstrapModule(locator));
+        modules.add(new JerseyGuiceModule(name));
         modules.add(new ServletModule());
         
         modules.add(new AbstractModule() {
@@ -65,7 +69,8 @@ public class SingletonResourceTest {
           }
         });
         
-        return Guice.createInjector(modules);
+        return Guice.createInjector(modules)
+            .getInstance(ServiceLocator.class);
       }
     });
     

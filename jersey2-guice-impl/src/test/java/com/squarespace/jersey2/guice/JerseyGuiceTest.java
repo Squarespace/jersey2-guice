@@ -17,7 +17,6 @@
 package com.squarespace.jersey2.guice;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
@@ -42,12 +41,12 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
@@ -88,23 +87,28 @@ public class JerseyGuiceTest {
   
   @AfterTest
   public void reset() {
-    BootstrapUtils.reset();
+    JerseyGuiceUtils.reset();
   }
 
   @Test
-  public void useReflection() throws IOException {
-    BootstrapUtils.install(new GuiceServiceLocatorGenerator() {
+  public void checkJersey() throws IOException {
+    JerseyGuiceUtils.install(new ServiceLocatorGenerator() {
       @Override
-      protected Injector createInjector(ServiceLocator locator) {
+      public ServiceLocator create(String name, ServiceLocator parent) {
+        if (!name.startsWith("__HK2_")) {
+          return null;
+        }
+        
         List<Module> modules = new ArrayList<>();
         
-        modules.add(new BootstrapModule(locator));
+        modules.add(new JerseyGuiceModule(name));
         modules.add(new ServletModule());
         
         modules.add(jerseyModule);
         modules.add(customModule);
         
-        return Guice.createInjector(modules);
+        return Guice.createInjector(modules)
+            .getInstance(ServiceLocator.class);
       }
     });
     
@@ -114,8 +118,6 @@ public class JerseyGuiceTest {
   }
 
   private void check() throws IOException {
-    assertTrue(BootstrapUtils.isInstalled(), "jersey2-guice is not installed");
-
     String url = "http://localhost:" + HttpServerUtils.PORT;
 
     String[] paths = {
