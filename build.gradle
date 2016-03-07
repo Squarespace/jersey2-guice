@@ -86,109 +86,109 @@ subprojects {
     exclude '**/*IT.*'
     include '**/*Test.*'
   }
+  
+  task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+  }
+  
+  task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+  }
+  
+  artifacts {
+    archives sourcesJar 
+    archives javadocJar
+  }
+  
+  javadoc {
+    classpath += [configurations.provided]
+    
+    options.links('http://docs.oracle.com/javase/7/docs/api/', 
+      'http://docs.oracle.com/javaee/7/api/',
+      'http://google-guice.googlecode.com/git/javadoc/',
+      'https://hk2.java.net/2.4.0-b32/apidocs/')
+  }
+  
+  signing {
+    required { gradle.taskGraph.hasTask('uploadArchives') }
+    sign configurations.archives
+  }
+  
+  task uploadSquarespace(type: Upload) {
+    configuration = configurations.archives
+    
+    repositories {
+      mavenDeployer {
+        if (project.hasProperty('RELEASE_REPOSITORY_URL') 
+            && project.hasProperty('SNAPSHOT_REPOSITORY_URL')) {
+          repository(url: RELEASE_REPOSITORY_URL)
+          snapshotRepository(url: SNAPSHOT_REPOSITORY_URL)
+          
+        } else {
+          logger.error("RELEASE_REPOSITORY_URL and/or SNAPSHOT_REPOSITORY_URL missing.")
+        }
+      }
+    }
+  }
+  
+  uploadArchives {
+    repositories {
+      mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+        
+        // NOTE: The 'MAVEN_CENTRAL_USERNAME' and 'MAVEN_CENTRAL_PASSWORD' are
+        // stored in the ~/.gradle/gradle.properties file.
+        
+        if (project.hasProperty('MAVEN_CENTRAL_USERNAME') 
+            && project.hasProperty('MAVEN_CENTRAL_PASSWORD')) {
+          
+          repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+            authentication(userName: MAVEN_CENTRAL_USERNAME, password: MAVEN_CENTRAL_PASSWORD)
+          }
+    
+          snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+            authentication(userName: MAVEN_CENTRAL_USERNAME, password: MAVEN_CENTRAL_PASSWORD)
+          }
+        } else {
+          logger.error("MAVEN_CENTRAL_USERNAME and/or MAVEN_CENTRAL_PASSWORD missing.")
+        }
+        
+        pom.project {
+          name 'Jersey 2.0 w/ Guice'
+          packaging 'jar'
+          description 'This library adds support for Jersey 2.0 w/ Guice'
+          url 'https://github.com/Squarespace/jersey2-guice'
+  
+          scm {
+            connection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
+            developerConnection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
+            url 'https://github.com/Squarespace/jersey2-guice'
+          }
+  
+          licenses {
+            license {
+              name 'The Apache Software License, Version 2.0'
+              url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+          }
+  
+          developers {
+            developer {
+              id 'Squarespace, Inc.'
+              url 'http://www.squarespace.com'
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 dependencies {
   compile project(':jersey2-guice-spi')
   compile project(':jersey2-guice-impl')
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier = 'sources'
-  from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier = 'javadoc'
-  from javadoc.destinationDir
-}
-
-artifacts {
-  archives sourcesJar 
-  archives javadocJar
-}
-
-javadoc {
-  classpath += [configurations.provided]
-  
-  options.links('http://docs.oracle.com/javase/7/docs/api/', 
-    'http://docs.oracle.com/javaee/7/api/',
-    'http://google-guice.googlecode.com/git/javadoc/',
-    'https://hk2.java.net/2.4.0-b32/apidocs/')
-}
-
-signing {
-  required { gradle.taskGraph.hasTask('uploadArchives') }
-  sign configurations.archives
-}
-
-task uploadSquarespace(type: Upload) {
-  configuration = configurations.archives
-  
-  repositories {
-    mavenDeployer {
-      if (project.hasProperty('RELEASE_REPOSITORY_URL') 
-          && project.hasProperty('SNAPSHOT_REPOSITORY_URL')) {
-        repository(url: RELEASE_REPOSITORY_URL)
-        snapshotRepository(url: SNAPSHOT_REPOSITORY_URL)
-        
-      } else {
-        logger.error("RELEASE_REPOSITORY_URL and/or SNAPSHOT_REPOSITORY_URL missing.")
-      }
-    }
-  }
-}
-
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-      
-      // NOTE: The 'MAVEN_CENTRAL_USERNAME' and 'MAVEN_CENTRAL_PASSWORD' are
-      // stored in the ~/.gradle/gradle.properties file.
-      
-      if (project.hasProperty('MAVEN_CENTRAL_USERNAME') 
-          && project.hasProperty('MAVEN_CENTRAL_PASSWORD')) {
-        
-        repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-          authentication(userName: MAVEN_CENTRAL_USERNAME, password: MAVEN_CENTRAL_PASSWORD)
-        }
-  
-        snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-          authentication(userName: MAVEN_CENTRAL_USERNAME, password: MAVEN_CENTRAL_PASSWORD)
-        }
-      } else {
-        logger.error("MAVEN_CENTRAL_USERNAME and/or MAVEN_CENTRAL_PASSWORD missing.")
-      }
-      
-      pom.project {
-        name 'Jersey 2.0 w/ Guice'
-        packaging 'jar'
-        description 'This library adds support for Jersey 2.0 w/ Guice'
-        url 'https://github.com/Squarespace/jersey2-guice'
-
-        scm {
-          connection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
-          developerConnection 'scm:git:https://github.com/Squarespace/jersey2-guice.git'
-          url 'https://github.com/Squarespace/jersey2-guice'
-        }
-
-        licenses {
-          license {
-            name 'The Apache Software License, Version 2.0'
-            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-          }
-        }
-
-        developers {
-          developer {
-            id 'Squarespace, Inc.'
-            url 'http://www.squarespace.com'
-          }
-        }
-      }
-    }
-  }
 }
 
 release {
