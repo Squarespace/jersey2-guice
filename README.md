@@ -57,48 +57,6 @@ public static void main(String[] args) {
 
 ```
 
-```java
-public static void main(String[] args) {
-
-  List<Module> modules = new ArrayList<>();
-  
-  modules.add(new ServletModule());
-  modules.add(new AbstractModule() {
-    @Override
-    protected void configure() {
-      // ...
-    }
-  });
-  
-  Injector injector = Guice.createInjector(modules);
-  
-  JerseyGuiceUtils.install(new ServiceLocatorGenerator() {
-    @Override
-    public ServiceLocator create(String name, ServiceLocator parent) {
-      if (!name.startsWith("__HK2_Generated_")) {
-        return null;
-      }
-      
-      List<Module> modules = new ArrayList<>();
-      
-      modules.add(new JerseyGuiceModule(name));
-      modules.add(new AbstractModule() {
-        @Override
-        protected void configure() {
-          // ...
-        }
-      });
-      
-      return injector.createChildInjector(modules)
-          .getInstance(ServiceLocator.class);
-    }
-  });
-  
-  // ... continue ...
-}
-```
-
-
 ### Documentation
 
 The [User's Guide](https://github.com/Squarespace/jersey2-guice/wiki) can be found in the Wiki.
