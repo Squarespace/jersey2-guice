@@ -195,4 +195,4 @@ release {
   failOnSnapshotDependencies = false
 }
 
-createReleaseTag.dependsOn ':uploadArchives', ':uploadSquarespace'
+createReleaseTag.dependsOn ':jersey2-guice-spi:uploadArchives', ':jersey2-guice-spi:uploadSquarespace', ':jersey2-guice-impl:uploadArchives', ':jersey2-guice-impl:uploadSquarespace'
