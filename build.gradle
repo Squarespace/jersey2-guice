@@ -33,6 +33,24 @@ allprojects {
   configurations {
     provided
   }
+
+  apply plugin: 'maven'
+
+  task createPom << {
+    pom {
+      project {
+
+        inceptionYear '2008'
+        licenses {
+          license {
+            name 'The Apache Software License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            distribution 'repo'
+          }
+        }
+      }
+    }.writeTo("pom.xml")
+  }
 }
 
 subprojects {
@@ -187,7 +205,6 @@ subprojects {
 }
 
 dependencies {
-  compile project(':jersey2-guice-spi')
   compile project(':jersey2-guice-impl')
 }
 
@@ -195,4 +212,4 @@ release {
   failOnSnapshotDependencies = false
 }
 
-createReleaseTag.dependsOn ':jersey2-guice-spi:uploadArchives', ':jersey2-guice-spi:uploadSquarespace', ':jersey2-guice-impl:uploadArchives', ':jersey2-guice-impl:uploadSquarespace'
+createReleaseTag.dependsOn ':jersey2-guice-impl:uploadArchives', ':jersey2-guice-impl:uploadSquarespace'

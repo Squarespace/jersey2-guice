@@ -1,8 +1,0 @@
-
-archivesBaseName = "0-${project.name}"
-
-dependencies {
-  compile ("org.glassfish.hk2:hk2-api:${project.hk2Version}") {
-    transitive = false
-  }
-}

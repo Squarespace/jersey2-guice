@@ -47,7 +47,7 @@ public class GuiceServiceLocatorGeneratorStub implements ServiceLocatorGenerator
     ServiceLocatorGenerator generator = GENERATOR_REF.get();
     
     if (generator == null) {
-      throw new IllegalStateException("It appears there is no ServiceLocatorGenerator installed.");
+      generator = GENERATOR_REF.getAndSet( new GuiceServiceLocatorGenerator() );
     }
     
     return generator.create(name, parent);

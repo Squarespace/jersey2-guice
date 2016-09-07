@@ -1,7 +1,5 @@
 
 dependencies {
-  compile project(':jersey2-guice-spi')
-  
   compile 'org.slf4j:slf4j-api:1.7.16'
   
   compile 'com.google.code.findbugs:jsr305:3.0.1'
