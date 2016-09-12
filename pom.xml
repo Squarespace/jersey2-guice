@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.squarespace.jersey2-guice</groupId>
 	<artifactId>jersey2-guice</artifactId>
-	<version>1.0.7</version>
+	<version>1.0.6.1</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -25,8 +25,26 @@
 						<target>1.8</target>
 					</configuration>
 				</plugin>
+
+				<!-- DEPLOY  -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>2.7</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>8drelease</id>
+			<url>https://nexus.priv.8d.com:2443/nexus/content/repositories/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>8dsnapshot</id>
+			<url>https://nexus.priv.8d.com:2443/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>

@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.squarespace.jersey2-guice</groupId>
     <artifactId>jersey2-guice</artifactId>
-    <version>1.0.7</version>
+    <version>1.0.6.1</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -39,7 +39,7 @@
     <dependency>
       <groupId>org.glassfish.jersey.containers</groupId>
       <artifactId>jersey-container-servlet-core</artifactId>
-      <version>2.22.2</version>
+      <version>2.23.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>org.glassfish.jersey.containers</groupId>
       <artifactId>jersey-container-servlet</artifactId>
-      <version>2.22.2</version>
+      <version>2.23.1</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>

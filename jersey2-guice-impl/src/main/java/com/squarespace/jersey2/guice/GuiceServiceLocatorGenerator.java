@@ -25,7 +25,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
 
-class GuiceServiceLocatorGenerator implements ServiceLocatorGenerator {
+public class GuiceServiceLocatorGenerator implements ServiceLocatorGenerator {
   
   private final ServiceLocatorGenerator generator = new ServiceLocatorGeneratorImpl();
   
