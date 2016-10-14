@@ -209,8 +209,11 @@ public class JerseyGuiceUtils {
       clazz = Injections.class;
       field = clazz.getDeclaredField("factory");
 
+      Field modifiersField = Field.class.getDeclaredField("modifiers");
+      modifiersField.setAccessible(true);
+      modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
       field.setAccessible(true);
-      field.setInt(field, field.getModifiers() & ~Modifier.FINAL);
 
       set(field, null, guiceServiceLocatorFactory);
       
