@@ -42,6 +42,7 @@ import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
 import org.jvnet.hk2.internal.DefaultClassAnalyzer;
@@ -203,6 +204,17 @@ public class JerseyGuiceUtils {
       Class<?> clazz = ServiceLocatorFactory.class;
       Field field = clazz.getDeclaredField("INSTANCE");
       
+      set(field, null, guiceServiceLocatorFactory);
+
+      clazz = Injections.class;
+      field = clazz.getDeclaredField("factory");
+
+      Field modifiersField = Field.class.getDeclaredField("modifiers");
+      modifiersField.setAccessible(true);
+      modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+      field.setAccessible(true);
+
       set(field, null, guiceServiceLocatorFactory);
       
       return guiceServiceLocatorFactory;

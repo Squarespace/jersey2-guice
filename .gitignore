@@ -5,9 +5,13 @@
 .settings
 .classpath
 
+.idea
+*.iml
+
 .gradle
 gradlew.bat
 
 build
 bin
 test-output
+target

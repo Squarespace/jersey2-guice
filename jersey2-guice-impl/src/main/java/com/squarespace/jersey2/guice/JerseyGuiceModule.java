@@ -16,6 +16,9 @@
 
 package com.squarespace.jersey2.guice;
 
+import com.google.inject.Injector;
+import com.google.inject.servlet.RequestScoped;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -28,19 +31,26 @@ import javax.ws.rs.ext.Providers;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.inject.Injector;
-import com.google.inject.servlet.RequestScoped;
-
 public class JerseyGuiceModule extends JerseyModule {
 
   private final ServiceLocator locator;
+  private final boolean useGuiceServlet;
   
   public JerseyGuiceModule(String name) {
     this(JerseyGuiceUtils.newServiceLocator(name));
   }
+
+  public JerseyGuiceModule(String name, boolean useGuiceServlet) {
+    this(JerseyGuiceUtils.newServiceLocator(name), useGuiceServlet);
+  }
   
   public JerseyGuiceModule(ServiceLocator locator) {
+    this(locator, true);
+  }
+
+  public JerseyGuiceModule(ServiceLocator locator, boolean useGuiceServlet) {
     this.locator = locator;
+    this.useGuiceServlet = useGuiceServlet;
   }
 
   @Override
@@ -49,30 +59,32 @@ public class JerseyGuiceModule extends JerseyModule {
     Provider<Injector> injector = getProvider(Injector.class);
     bind(ServiceLocator.class).toProvider(new ServiceLocatorProvider(injector, locator))
       .in(Singleton.class);
-    
-    Provider<ServiceLocator> provider = getProvider(ServiceLocator.class);
-    
-    bind(Application.class)
-      .toProvider(new JerseyProvider<>(provider, Application.class));
-    
-    bind(Providers.class)
-      .toProvider(new JerseyProvider<>(provider, Providers.class));
-    
-    bind(UriInfo.class)
-      .toProvider(new JerseyProvider<>(provider, UriInfo.class))
-      .in(RequestScoped.class);
-    
-    bind(HttpHeaders.class)
-      .toProvider(new JerseyProvider<>(provider, HttpHeaders.class))
-      .in(RequestScoped.class);
-    
-    bind(SecurityContext.class)
-      .toProvider(new JerseyProvider<>(provider, SecurityContext.class))
-      .in(RequestScoped.class);
-    
-    bind(Request.class)
-      .toProvider(new JerseyProvider<>(provider, Request.class))
-      .in(RequestScoped.class);
+
+    if (useGuiceServlet) {
+      Provider<ServiceLocator> provider = getProvider(ServiceLocator.class);
+
+      bind(Application.class)
+        .toProvider(new JerseyProvider<>(provider, Application.class));
+
+      bind(Providers.class)
+        .toProvider(new JerseyProvider<>(provider, Providers.class));
+
+      bind(UriInfo.class)
+        .toProvider(new JerseyProvider<>(provider, UriInfo.class))
+        .in(RequestScoped.class);
+
+      bind(HttpHeaders.class)
+        .toProvider(new JerseyProvider<>(provider, HttpHeaders.class))
+        .in(RequestScoped.class);
+
+      bind(SecurityContext.class)
+        .toProvider(new JerseyProvider<>(provider, SecurityContext.class))
+        .in(RequestScoped.class);
+
+      bind(Request.class)
+        .toProvider(new JerseyProvider<>(provider, Request.class))
+        .in(RequestScoped.class);
+    }
   }
   
   private static class JerseyProvider<T> implements Provider<T> {

@@ -57,6 +57,10 @@ public static void main(String[] args) {
 
 ```
 
+#### META-INF
+
+To ensure Jersey/HK2 SPIs will use the proper ServiceLocationGenerator, simply copy the META-INF folder into your root project's resources folder.
+
 ### Documentation
 
 The [User's Guide](https://github.com/Squarespace/jersey2-guice/wiki) can be found in the Wiki.
