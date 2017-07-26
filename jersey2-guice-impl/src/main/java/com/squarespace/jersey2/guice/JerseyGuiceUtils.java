@@ -361,9 +361,20 @@ public class JerseyGuiceUtils {
       }
       
       ElementSource element = (ElementSource)source;
-      List<String> names = element.getModuleClassNames();
-      String name = names.get(0);
-      
+      if (!isJerseyBinding(key, element) && !isJerseyBinding(key, element.getOriginalElementSource())) {
+        binders.add(new GuiceBinder(key, binding));
+      }
+    }
+    
+    return binders;
+  }
+
+  private static boolean isJerseyBinding(Key<?> key, ElementSource element) {
+    if (element == null) {
+      return false;
+    }
+    List<String> names = element.getModuleClassNames();
+    for (String name : names) {
       // Skip everything that is declared in a JerseyModule
       try {
 
@@ -381,8 +392,7 @@ public class JerseyGuiceUtils {
           if (LOG.isTraceEnabled()) {
             LOG.trace("Ignoring binding {} in {}", key, module);
           }
-          
-          continue;
+          return true;
         }
       } catch (ClassNotFoundException err) {
         // Some modules may not be able to be instantiated directly here as a class if we're running
@@ -393,13 +403,10 @@ public class JerseyGuiceUtils {
           LOG.warn("Unavailable to load class in order to validate module: name={}", name);
         }
       }
-      
-      binders.add(new GuiceBinder(key, binding));
     }
-    
-    return binders;
+    return false;
   }
-  
+
   private static void set(Field field, Object instance, Object value) throws  IllegalAccessException, NoSuchFieldException, SecurityException {
     field.setAccessible(true);
     
