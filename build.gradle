@@ -1,9 +1,9 @@
 plugins {
-  id 'net.researchgate.release' version '2.3.4'
+  id 'net.researchgate.release' version '2.6.0'
 }
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '2.11'
+  gradleVersion = '5.1.1'
 }
 
 allprojects {
@@ -16,8 +16,8 @@ allprojects {
   // UTF-8 should be standard by now. So use it!
   [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
   
-  sourceCompatibility = 1.7
-  targetCompatibility = 1.7
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
   
   group = 'com.squarespace.jersey2-guice'
   
@@ -38,9 +38,9 @@ allprojects {
 subprojects {
 
   project.ext {
-    guiceVersion = '4.0'
-    jerseyVersion = '2.22.2'
-    hk2Version = '2.4.0-b34'
+    guiceVersion = '4.2.2'
+    jerseyVersion = '2.28'
+    hk2Version = '2.5.0'
   }
 
   // Telling Eclipse about the provided scope
@@ -105,10 +105,10 @@ subprojects {
   javadoc {
     classpath += [configurations.provided]
     
-    options.links('http://docs.oracle.com/javase/7/docs/api/', 
+    options.links('http://docs.oracle.com/javase/8/docs/api/', 
       'http://docs.oracle.com/javaee/7/api/',
       'http://google-guice.googlecode.com/git/javadoc/',
-      'https://hk2.java.net/2.4.0-b32/apidocs/')
+      'https://javaee.github.io/hk2/')
   }
   
   signing {

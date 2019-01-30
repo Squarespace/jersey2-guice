@@ -62,6 +62,11 @@ class GuiceBindingDescriptor<T> extends AbstractActiveDescriptor<T> {
   }
 
   @Override
+  public Type getImplementationType() {
+    return this.clazz;
+  }
+
+  @Override
   public T create(ServiceHandle<?> root) {
     return binding.getProvider().get();
   }

@@ -5,4 +5,10 @@ dependencies {
   compile ("org.glassfish.hk2:hk2-api:${project.hk2Version}") {
     transitive = false
   }
+  compile ("org.glassfish.hk2:hk2-utils:${project.hk2Version}") {
+    transitive = false
+  }
+  compile ("org.glassfish.hk2:hk2-locator:${project.hk2Version}") {
+    transitive = false
+  }
 }

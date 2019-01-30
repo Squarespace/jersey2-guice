@@ -2,7 +2,7 @@
 dependencies {
   compile project(':jersey2-guice-spi')
   
-  compile 'org.slf4j:slf4j-api:1.7.16'
+  compile 'org.slf4j:slf4j-api:1.7.25'
   
   compile 'com.google.code.findbugs:jsr305:3.0.1'
   compile "com.google.inject.extensions:guice-servlet:${project.guiceVersion}"
@@ -17,9 +17,15 @@ dependencies {
     // Use Guice's javax.inject module
     exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
   }
+
+  testCompile ("org.glassfish.jersey.inject:jersey-hk2:${project.jerseyVersion}") {
+    // Use Guice's javax.inject module
+    exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
+  }
   
   provided 'javax.servlet:javax.servlet-api:3.1.0'
   
-  testCompile 'org.eclipse.jetty:jetty-servlet:9.2.9.v20150224'
+  testCompile 'org.eclipse.jetty:jetty-servlet:9.4.14.v20181114'
   testCompile 'org.testng:testng:6.9.10'
+
 }

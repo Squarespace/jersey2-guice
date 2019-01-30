@@ -16,23 +16,11 @@
 
 package com.squarespace.jersey2.guice;
 
-import static com.squarespace.jersey2.guice.BindingUtils.newGuiceInjectionResolverDescriptor;
-import static com.squarespace.jersey2.guice.BindingUtils.newThreeThirtyInjectionResolverDescriptor;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.inject.Singleton;
-
+import com.google.inject.Binding;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.spi.ElementSource;
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
@@ -54,11 +42,21 @@ import org.jvnet.hk2.internal.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Binding;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.spi.ElementSource;
+import javax.inject.Singleton;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.squarespace.jersey2.guice.BindingUtils.newGuiceInjectionResolverDescriptor;
+import static com.squarespace.jersey2.guice.BindingUtils.newThreeThirtyInjectionResolverDescriptor;
 
 /**
  * An utility class to bootstrap HK2's {@link ServiceLocator}s and {@link Guice}'s {@link Injector}s.
@@ -305,7 +303,6 @@ public class JerseyGuiceUtils {
   
   /**
    * @see #link(ServiceLocator, Injector)
-   * @see #newChildInjector(Injector, ServiceLocator)
    */
   private static ServiceLocator link(ServiceLocator locator, 
       Injector injector, Iterable<? extends Binder> binders) {
@@ -321,18 +318,31 @@ public class JerseyGuiceUtils {
     bind(locator, dc, new MessagingBinders.HeaderDelegateProviders());
     
     for (Binder binder : binders) {
-      bind(locator, dc, binder);
+      if (binder instanceof org.glassfish.hk2.utilities.binding.AbstractBinder){
+        bind(locator, dc, (org.glassfish.hk2.utilities.binding.AbstractBinder) binder);
+      } else {
+        bind(locator, dc, (org.glassfish.jersey.internal.inject.AbstractBinder) binder);
+      }
     }
     
     dc.commit();
     return locator;
   }
-  
+
   /**
    * @see ServiceLocator#inject(Object)
    * @see Binder#bind(DynamicConfiguration)
    */
-  private static void bind(ServiceLocator locator, DynamicConfiguration dc, Binder binder) {
+  private static void bind(ServiceLocator locator, DynamicConfiguration dc, org.glassfish.hk2.utilities.binding.AbstractBinder binder) {
+    locator.inject(binder);
+    binder.bind(dc);
+  }
+
+  /**
+   * @see ServiceLocator#inject(Object)
+   * @see Binder#bind(DynamicConfiguration)
+   */
+  private static void bind(ServiceLocator locator, DynamicConfiguration dc, org.glassfish.jersey.internal.inject.AbstractBinder binder) {
     locator.inject(binder);
     binder.bind(dc);
   }
