@@ -161,23 +161,18 @@ public class JerseyGuiceUtils {
   }
   
   private static ServiceLocatorGenerator lookupSPI() {
-    return AccessController.doPrivileged(new PrivilegedAction<ServiceLocatorGenerator>() {
-      @Override
-      public ServiceLocatorGenerator run() {
-        try {
-          ClassLoader classLoader = JerseyGuiceUtils.class.getClassLoader();
-          ServiceLoader<ServiceLocatorGenerator> providers 
-              = ServiceLoader.load(ServiceLocatorGenerator.class, classLoader);
-          
-          for (ServiceLocatorGenerator generator : providers) {
-            return generator;
-          }
-        } catch (Throwable th) {
-          LOG.warn("Exception", th);
-        }
-        
-        return null;
+    return AccessController.doPrivileged((PrivilegedAction<ServiceLocatorGenerator>) () -> {
+      try {
+        ClassLoader classLoader = JerseyGuiceUtils.class.getClassLoader();
+        ServiceLoader<ServiceLocatorGenerator> providers
+            = ServiceLoader.load(ServiceLocatorGenerator.class, classLoader);
+
+        return providers.iterator().next();
+      } catch (Throwable th) {
+        LOG.warn("Exception", th);
       }
+
+      return null;
     });
   }
   
@@ -280,7 +275,7 @@ public class JerseyGuiceUtils {
   public static ServiceLocator link(ServiceLocator locator, Injector injector) {
     
     Map<Key<?>, Binding<?>> bindings = gatherBindings(injector);
-    Set<Binder> binders = toBinders(bindings);
+    Set<GuiceBinder> binders = toBinders(bindings);
     
     return link(locator, injector, binders);
   }
@@ -290,7 +285,7 @@ public class JerseyGuiceUtils {
    */
   private static Map<Key<?>, Binding<?>> gatherBindings(Injector injector) {
       
-    Map<Key<?>, Binding<?>> dst = new HashMap<Key<?>, Binding<?>>();
+    Map<Key<?>, Binding<?>> dst = new HashMap<>();
     
     Injector current = injector;
     while (current != null) {
@@ -305,7 +300,7 @@ public class JerseyGuiceUtils {
    * @see #link(ServiceLocator, Injector)
    */
   private static ServiceLocator link(ServiceLocator locator, 
-      Injector injector, Iterable<? extends Binder> binders) {
+      Injector injector, Iterable<? extends GuiceBinder> binders) {
     
     DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
     DynamicConfiguration dc = dcs.createDynamicConfiguration();
@@ -317,12 +312,8 @@ public class JerseyGuiceUtils {
     
     bind(locator, dc, new MessagingBinders.HeaderDelegateProviders());
     
-    for (Binder binder : binders) {
-      if (binder instanceof org.glassfish.hk2.utilities.binding.AbstractBinder){
-        bind(locator, dc, (org.glassfish.hk2.utilities.binding.AbstractBinder) binder);
-      } else {
-        bind(locator, dc, (org.glassfish.jersey.internal.inject.AbstractBinder) binder);
-      }
+    for (GuiceBinder binder : binders) {
+        bind(locator, dc, binder);
     }
     
     dc.commit();
@@ -351,8 +342,8 @@ public class JerseyGuiceUtils {
    * Turns the given Guice {@link Binding}s into HK2 {@link Binder}s.
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  private static Set<Binder> toBinders(Map<Key<?>, Binding<?>> bindings) {
-    Set<Binder> binders = new HashSet<>();
+  private static Set<GuiceBinder> toBinders(Map<Key<?>, Binding<?>> bindings) {
+    Set<GuiceBinder> binders = new HashSet<>();
     
     for (Map.Entry<Key<?>, Binding<?>> entry : bindings.entrySet()) {
       Key<?> key = entry.getKey();

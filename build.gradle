@@ -103,8 +103,8 @@ subprojects {
   }
   
   javadoc {
-    classpath += [configurations.provided]
-    
+    classpath.add(configurations.provided)
+
     options.links('http://docs.oracle.com/javase/8/docs/api/', 
       'http://docs.oracle.com/javaee/7/api/',
       'http://google-guice.googlecode.com/git/javadoc/',
